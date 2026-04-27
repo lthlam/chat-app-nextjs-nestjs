@@ -1,0 +1,58 @@
+# Root ignore rules for monorepo folders
+
+# OS/editor
+.DS_Store
+.idea/
+.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Backend (be)
+be/node_modules/
+be/dist/
+be/build/
+be/coverage/
+be/.nyc_output/
+be/.env
+be/.env.development.local
+be/.env.test.local
+be/.env.production.local
+be/.env.local
+be/.temp/
+be/.tmp/
+be/pids/
+be/*.pid
+be/*.seed
+be/*.pid.lock
+be/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+be/uploads/
+
+
+# Frontend (fe)
+fe/node_modules/
+fe/.pnp
+fe/.pnp.*
+fe/.yarn/*
+!fe/.yarn/patches
+!fe/.yarn/plugins
+!fe/.yarn/releases
+!fe/.yarn/versions
+fe/coverage/
+fe/.next/
+fe/out/
+fe/build/
+fe/*.pem
+fe/.env*
+fe/.vercel/
+fe/*.tsbuildinfo
+fe/next-env.d.ts
+
+# AI and Agent rules
+.agents/
+skills-lock.json
