@@ -48,7 +48,9 @@ fe/.next/
 fe/out/
 fe/build/
 fe/*.pem
-fe/.env*
+fe/.env
+fe/.env.local
+fe/.env.*.local
 fe/.vercel/
 fe/*.tsbuildinfo
 fe/next-env.d.ts
