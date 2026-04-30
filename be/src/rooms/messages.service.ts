@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, MoreThan, Repository, IsNull } from 'typeorm';
+import { In, MoreThan, Repository, IsNull, DataSource } from 'typeorm';
 import { Message } from './message.entity';
 import { MessageReaction } from './message-reaction.entity';
 import { MessageRead } from './message-read.entity';
@@ -32,6 +32,7 @@ export class MessagesService implements OnModuleInit {
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
     private usersService: UsersService,
     private eventEmitter: EventEmitter2,
+    private dataSource: DataSource,
   ) {}
 
   async onModuleInit() {
@@ -474,47 +475,50 @@ export class MessagesService implements OnModuleInit {
   }
 
   async markRoomAsDelivered(roomId: string, userId: string) {
-    // Find all messages in the room NOT sent by this user AND NOT yet delivered
-    const undeliveredMessages = await this.messagesRepository
-      .createQueryBuilder('message')
-      .where('message.roomId = :roomId', { roomId })
-      .andWhere('message.senderId != :userId', { userId })
-      .andWhere('message.delivered_at IS NULL')
-      .getMany();
+    return this.dataSource.transaction(async (manager) => {
+      const undeliveredMessages = await manager
+        .getRepository(Message)
+        .createQueryBuilder('message')
+        .setLock('pessimistic_write')
+        .where('message.roomId = :roomId', { roomId })
+        .andWhere('message.senderId != :userId', { userId })
+        .andWhere('message.delivered_at IS NULL')
+        .getMany();
 
-    if (undeliveredMessages.length === 0) {
-      return [];
-    }
+      if (undeliveredMessages.length === 0) {
+        return [];
+      }
 
-    const now = new Date();
-    const ids = undeliveredMessages.map((m) => m.id);
+      const now = new Date();
+      const ids = undeliveredMessages.map((m) => m.id);
 
-    await this.messagesRepository.update(ids, {
-      delivered_at: now,
-    });
-
-    const updatedMessages = await this.messagesRepository.find({
-      where: { id: In(ids) },
-      relations: [
-        'room',
-        'sender',
-        'reply_to',
-        'reply_to.sender',
-        'reactions',
-        'reactions.user',
-        'reads',
-        'reads.user',
-      ],
-    });
-
-    if (updatedMessages.length > 0) {
-      this.eventEmitter.emit('message.room_delivered', {
-        roomId,
-        messages: updatedMessages,
+      await manager.getRepository(Message).update(ids, {
+        delivered_at: now,
       });
-    }
 
-    return updatedMessages;
+      const updatedMessages = await manager.getRepository(Message).find({
+        where: { id: In(ids) },
+        relations: [
+          'room',
+          'sender',
+          'reply_to',
+          'reply_to.sender',
+          'reactions',
+          'reactions.user',
+          'reads',
+          'reads.user',
+        ],
+      });
+
+      if (updatedMessages.length > 0) {
+        this.eventEmitter.emit('message.room_delivered', {
+          roomId,
+          messages: updatedMessages,
+        });
+      }
+
+      return updatedMessages;
+    });
   }
 
   async editMessage(messageId: string, content: string) {
@@ -578,53 +582,65 @@ export class MessagesService implements OnModuleInit {
   }
 
   async addReaction(messageId: string, userId: string, emoji: string) {
-    const message = await this.messagesRepository.findOne({
-      where: { id: messageId },
-      relations: ['room', 'reactions', 'reactions.user', 'reads', 'reads.user'],
-    });
-    const user = await this.usersRepository.findOneBy({ id: userId });
-
-    // Check if user already reacted with this emoji
-    const existingReaction = message.reactions.find(
-      (r) => r.user.id === userId && r.emoji === emoji,
-    );
-
-    if (existingReaction) {
-      // Remove the reaction
-      await this.reactionsRepository.delete(existingReaction.id);
-    } else {
-      // Add the reaction
-      const reaction = this.reactionsRepository.create({
-        message,
-        user,
-        emoji,
+    return this.dataSource.transaction(async (manager) => {
+      const message = await manager.getRepository(Message).findOne({
+        where: { id: messageId },
+        relations: [
+          'room',
+          'reactions',
+          'reactions.user',
+          'reads',
+          'reads.user',
+        ],
+        lock: { mode: 'pessimistic_write' },
       });
-      await this.reactionsRepository.save(reaction);
-    }
 
-    const updated = await this.messagesRepository.findOne({
-      where: { id: messageId },
-      relations: [
-        'room',
-        'sender',
-        'reply_to',
-        'reply_to.sender',
-        'mentions',
-        'reactions',
-        'reactions.user',
-        'reads',
-        'reads.user',
-      ],
-    });
+      if (!message) throw new NotFoundException('Message not found');
 
-    if (updated) {
-      this.eventEmitter.emit('message.reaction_updated', {
-        roomId: updated.room.id,
-        message: updated,
+      const user = await manager.getRepository(User).findOneBy({ id: userId });
+      if (!user) throw new NotFoundException('User not found');
+
+      const existingReaction = message.reactions.find(
+        (r) => r.user.id === userId && r.emoji === emoji,
+      );
+
+      if (existingReaction) {
+        await manager
+          .getRepository(MessageReaction)
+          .delete(existingReaction.id);
+      } else {
+        const reaction = manager.getRepository(MessageReaction).create({
+          message,
+          user,
+          emoji,
+        });
+        await manager.getRepository(MessageReaction).save(reaction);
+      }
+
+      const updated = await manager.getRepository(Message).findOne({
+        where: { id: messageId },
+        relations: [
+          'room',
+          'sender',
+          'reply_to',
+          'reply_to.sender',
+          'mentions',
+          'reactions',
+          'reactions.user',
+          'reads',
+          'reads.user',
+        ],
       });
-    }
 
-    return updated;
+      if (updated) {
+        this.eventEmitter.emit('message.reaction_updated', {
+          roomId: updated.room.id,
+          message: updated,
+        });
+      }
+
+      return updated;
+    });
   }
 
   async removeReaction(reactionId: string) {
@@ -820,71 +836,74 @@ export class MessagesService implements OnModuleInit {
   }
 
   async markRoomAsSeen(roomId: string, userId: string) {
-    const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) {
-      return { roomId, user: null, updatedMessages: [] };
-    }
+    return this.dataSource.transaction(async (manager) => {
+      const isMember = await this.isRoomMember(roomId, userId);
+      if (!isMember) {
+        return { roomId, user: null, updatedMessages: [] };
+      }
 
-    const user = await this.usersRepository.findOneBy({ id: userId });
-    if (!user) {
-      return { roomId, user: null, updatedMessages: [] };
-    }
+      const user = await manager.getRepository(User).findOneBy({ id: userId });
+      if (!user) {
+        return { roomId, user: null, updatedMessages: [] };
+      }
 
-    // Find unread messages specifically
-    const unreadMessages = await this.messagesRepository
-      .createQueryBuilder('message')
-      .leftJoin('message.reads', 'read', 'read.userId = :userId', { userId })
-      .where('message.roomId = :roomId', { roomId })
-      .andWhere('message.senderId != :userId', { userId })
-      .andWhere('read.id IS NULL')
-      .getMany();
+      const unreadMessages = await manager
+        .getRepository(Message)
+        .createQueryBuilder('message')
+        .setLock('pessimistic_write')
+        .leftJoin('message.reads', 'read', 'read.userId = :userId', { userId })
+        .where('message.roomId = :roomId', { roomId })
+        .andWhere('message.senderId != :userId', { userId })
+        .andWhere('read.id IS NULL')
+        .getMany();
 
-    if (unreadMessages.length === 0) {
-      return {
+      if (unreadMessages.length === 0) {
+        return {
+          roomId,
+          user: {
+            id: user.id,
+            username: user.username,
+            avatar_url: user.avatar_url,
+          },
+          updatedMessages: [],
+        };
+      }
+
+      const readsToSave = unreadMessages.map((message) =>
+        manager.getRepository(MessageRead).create({ message, user }),
+      );
+      await manager.getRepository(MessageRead).save(readsToSave);
+
+      const updatedMessages = await manager.getRepository(Message).find({
+        where: { id: In(unreadMessages.map((message) => message.id)) },
+        relations: [
+          'room',
+          'sender',
+          'reply_to',
+          'reply_to.sender',
+          'mentions',
+          'reactions',
+          'reactions.user',
+          'reads',
+          'reads.user',
+        ],
+        order: { created_at: 'ASC' },
+      });
+
+      const seenPayload = {
         roomId,
         user: {
           id: user.id,
           username: user.username,
           avatar_url: user.avatar_url,
         },
-        updatedMessages: [],
+        updatedMessages,
       };
-    }
 
-    const readsToSave = unreadMessages.map((message) =>
-      this.readsRepository.create({ message, user }),
-    );
-    await this.readsRepository.save(readsToSave);
+      this.eventEmitter.emit('message.seen', seenPayload);
 
-    const updatedMessages = await this.messagesRepository.find({
-      where: { id: In(unreadMessages.map((message) => message.id)) },
-      relations: [
-        'room',
-        'sender',
-        'reply_to',
-        'reply_to.sender',
-        'mentions',
-        'reactions',
-        'reactions.user',
-        'reads',
-        'reads.user',
-      ],
-      order: { created_at: 'ASC' },
+      return seenPayload;
     });
-
-    const seenPayload = {
-      roomId,
-      user: {
-        id: user.id,
-        username: user.username,
-        avatar_url: user.avatar_url,
-      },
-      updatedMessages,
-    };
-
-    this.eventEmitter.emit('message.seen', seenPayload);
-
-    return seenPayload;
   }
 
   async getMedia(roomId: string, userId: string) {

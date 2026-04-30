@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, DataSource } from 'typeorm';
 import { Room } from './room.entity';
 import { Message } from './message.entity';
 import { User } from '../users/user.entity';
@@ -19,6 +19,7 @@ export class RoomsService {
     @InjectRepository(RoomClearedHistory)
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
     private eventEmitter: EventEmitter2,
+    private dataSource: DataSource,
   ) {}
 
   async getRooms(userId: string) {
@@ -173,28 +174,34 @@ export class RoomsService {
   }
 
   async createRoom(name: string, ownerId: string, memberIds: string[]) {
-    const owner = await this.usersRepository.findOneBy({ id: ownerId });
-    const members = await this.usersRepository.findBy({ id: In(memberIds) });
+    return this.dataSource.transaction(async (manager) => {
+      const owner = await manager
+        .getRepository(User)
+        .findOneBy({ id: ownerId });
+      const members = await manager
+        .getRepository(User)
+        .findBy({ id: In(memberIds) });
 
-    const room = this.roomsRepository.create({
-      name,
-      is_group_chat: memberIds.length > 1,
-      owner,
-      members: [owner, ...members],
+      const room = manager.getRepository(Room).create({
+        name,
+        is_group_chat: memberIds.length > 1,
+        owner,
+        members: [owner, ...members],
+      });
+
+      const savedRoom = await manager.getRepository(Room).save(room);
+
+      const invitedMemberIds = [
+        ...new Set((memberIds || []).map(String)),
+      ].filter((id) => id !== String(ownerId));
+
+      this.eventEmitter.emit('room.created', {
+        room: savedRoom,
+        ownerId,
+        invitedMemberIds,
+      });
+      return savedRoom;
     });
-
-    const savedRoom = await this.roomsRepository.save(room);
-
-    const invitedMemberIds = [...new Set((memberIds || []).map(String))].filter(
-      (id) => id !== String(ownerId),
-    );
-
-    this.eventEmitter.emit('room.created', {
-      room: savedRoom,
-      ownerId,
-      invitedMemberIds,
-    });
-    return savedRoom;
   }
 
   async updateRoom(
@@ -218,86 +225,99 @@ export class RoomsService {
   }
 
   async addMember(roomId: string, userId: string) {
-    const room = await this.roomsRepository.findOne({
-      where: { id: roomId },
-      relations: ['members'],
+    return this.dataSource.transaction(async (manager) => {
+      const room = await manager.getRepository(Room).findOne({
+        where: { id: roomId },
+        relations: ['members'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      const user = await manager.getRepository(User).findOneBy({ id: userId });
+
+      if (!room) {
+        throw new Error('Room not found');
+      }
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!room.members.find((m) => m.id === userId)) {
+        room.members.push(user);
+        await manager.getRepository(Room).save(room);
+        this.eventEmitter.emit('room.member.added', { roomId, userId });
+      }
+
+      return room;
     });
-    const user = await this.usersRepository.findOneBy({ id: userId });
-
-    if (!room) {
-      throw new Error('Room not found');
-    }
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    if (!room.members.find((m) => m.id === userId)) {
-      room.members.push(user);
-      await this.roomsRepository.save(room);
-      this.eventEmitter.emit('room.member.added', { roomId, userId });
-    }
-
-    return room;
   }
 
   async removeMember(roomId: string, userId: string) {
-    const room = await this.roomsRepository.findOne({
-      where: { id: roomId },
-      relations: ['owner', 'members'],
-    });
+    return this.dataSource.transaction(async (manager) => {
+      const room = await manager.getRepository(Room).findOne({
+        where: { id: roomId },
+        relations: ['owner', 'members'],
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    if (!room) {
-      throw new Error('Room not found');
-    }
+      if (!room) {
+        throw new Error('Room not found');
+      }
 
-    const ownerId = String(room.owner?.id || '');
+      const ownerId = String(room.owner?.id || '');
 
-    // Remove member
-    room.members = room.members.filter((m) => m.id !== userId);
+      // Remove member
+      room.members = room.members.filter((m) => m.id !== userId);
 
-    if (room.members.length === 0) {
-      await this.roomsRepository.remove(room);
+      if (room.members.length === 0) {
+        await manager.getRepository(Room).remove(room);
+        return room;
+      }
+
+      // If owner leaves, hand over owner role to one remaining member.
+      if (ownerId && ownerId === String(userId)) {
+        room.owner = room.members[0];
+      }
+
+      await manager.getRepository(Room).save(room);
+      this.eventEmitter.emit('room.member.removed', {
+        roomId,
+        userId,
+        reason: 'left',
+        newOwner: room.owner,
+      });
       return room;
-    }
-
-    // If owner leaves, hand over owner role to one remaining member.
-    if (ownerId && ownerId === String(userId)) {
-      room.owner = room.members[0];
-    }
-
-    await this.roomsRepository.save(room);
-    this.eventEmitter.emit('room.member.removed', {
-      roomId,
-      userId,
-      reason: 'left',
-      newOwner: room.owner,
     });
-    return room;
   }
 
   async removeMemberByOwner(roomId: string, userId: string, actorId: string) {
-    const room = await this.roomsRepository.findOne({
-      where: { id: roomId },
-      relations: ['owner', 'members'],
+    return this.dataSource.transaction(async (manager) => {
+      const room = await manager.getRepository(Room).findOne({
+        where: { id: roomId },
+        relations: ['owner', 'members'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      if (String(room.owner?.id) !== String(actorId)) {
+        throw new ForbiddenException(
+          'Chỉ có chủ nhóm mới có quyền kick thành viên.',
+        );
+      }
+
+      room.members = room.members.filter(
+        (m) => String(m.id) !== String(userId),
+      );
+      await manager.getRepository(Room).save(room);
+      this.eventEmitter.emit('room.member.removed', {
+        roomId,
+        userId,
+        reason: 'kicked',
+        newOwner: room.owner,
+      });
+      return room;
     });
-
-    if (!room) {
-      throw new Error('Room not found');
-    }
-
-    if (String(room.owner?.id) !== String(actorId)) {
-      throw new ForbiddenException('Chi chu nhom moi co quyen xoa thanh vien.');
-    }
-
-    room.members = room.members.filter((m) => String(m.id) !== String(userId));
-    await this.roomsRepository.save(room);
-    this.eventEmitter.emit('room.member.removed', {
-      roomId,
-      userId,
-      reason: 'kicked',
-      newOwner: room.owner,
-    });
-    return room;
   }
 
   async getGroupMembers(roomId: string) {
