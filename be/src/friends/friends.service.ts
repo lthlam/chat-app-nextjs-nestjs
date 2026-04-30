@@ -1,8 +1,8 @@
-import {
-  Injectable,
-  BadRequestException,
-} from '@nestjs/common';
+import { Inject, Injectable, BadRequestException } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { Repository } from 'typeorm';
 import { FriendRequest, FriendRequestStatus } from './friend-request.entity';
 import { User } from '../users/user.entity';
@@ -16,6 +16,7 @@ export class FriendsService {
     private friendRequestRepository: Repository<FriendRequest>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private eventEmitter: EventEmitter2,
     private usersService: UsersService,
   ) {}
@@ -149,6 +150,10 @@ export class FriendsService {
       payload: { requestId: savedRequest.id, friend: senderSummary },
     });
 
+    // Invalidate caches
+    await this.cacheManager.del(`friends_list_${request.sender.id}`);
+    await this.cacheManager.del(`friends_list_${request.receiver.id}`);
+
     return savedRequest;
   }
 
@@ -195,14 +200,21 @@ export class FriendsService {
   }
 
   async getFriendList(userId: string) {
+    const cacheKey = `friends_list_${userId}`;
+    const cached = await this.cacheManager.get<User[]>(cacheKey);
+    if (cached) return cached;
+
     const requests = await this.friendRequestRepository.find({
       where: { status: FriendRequestStatus.ACCEPTED },
       relations: ['sender', 'receiver'],
     });
 
-    return requests
+    const result = requests
       .filter((r) => r.sender.id === userId || r.receiver.id === userId)
       .map((r) => (r.sender.id === userId ? r.receiver : r.sender));
+
+    await this.cacheManager.set(cacheKey, result, 60000);
+    return result;
   }
 
   async removeFriend(userId: string, targetUserId: string) {
@@ -231,6 +243,10 @@ export class FriendsService {
 
     await this.friendRequestRepository.remove(request);
 
+    // Invalidate caches
+    await this.cacheManager.del(`friends_list_${userId}`);
+    await this.cacheManager.del(`friends_list_${targetUserId}`);
+
     this.eventEmitter.emit('friend.removed', { userId, targetUserId });
     this.eventEmitter.emit('friend.removed', {
       userId: targetUserId,
@@ -256,5 +272,11 @@ export class FriendsService {
       isFriend: request.status === FriendRequestStatus.ACCEPTED,
       isPending: request.status === FriendRequestStatus.PENDING,
     };
+  }
+
+  @OnEvent('user.blocked')
+  async handleUserBlocked(payload: { blockedId: string; blockerId: string }) {
+    await this.cacheManager.del(`friends_list_${payload.blockerId}`);
+    await this.cacheManager.del(`friends_list_${payload.blockedId}`);
   }
 }

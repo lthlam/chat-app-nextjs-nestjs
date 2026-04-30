@@ -127,6 +127,10 @@ export class UsersService implements OnModuleInit {
   }
 
   async blockUser(blockerId: string, blockedId: string): Promise<BlockedUser> {
+    if (blockerId === blockedId) {
+      throw new BadRequestException('Cannot block yourself');
+    }
+
     return this.dataSource.transaction(async (manager) => {
       const blocker = await manager.findOne(User, { where: { id: blockerId } });
       const blocked = await manager.findOne(User, { where: { id: blockedId } });
@@ -135,11 +139,23 @@ export class UsersService implements OnModuleInit {
         throw new NotFoundException('User not found');
       }
 
+      // Check if already blocked
+      const existing = await manager.findOne(BlockedUser, {
+        where: { blocker: { id: blockerId }, blocked: { id: blockedId } },
+      });
+      if (existing) {
+        return existing;
+      }
+
       // Unfriend logic: find and remove any friend requests between them
-      await manager.delete(FriendRequest, [
-        { sender: { id: blockerId }, receiver: { id: blockedId } },
-        { sender: { id: blockedId }, receiver: { id: blockerId } },
-      ]);
+      await manager.delete(FriendRequest, {
+        sender: { id: blockerId },
+        receiver: { id: blockedId },
+      });
+      await manager.delete(FriendRequest, {
+        sender: { id: blockedId },
+        receiver: { id: blockerId },
+      });
 
       const blockedUser = manager.create(BlockedUser, {
         blocker,
