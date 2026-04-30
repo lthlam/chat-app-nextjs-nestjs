@@ -62,8 +62,6 @@ export class UsersService implements OnModuleInit {
     return this.usersRepository.findOneBy({ id });
   }
 
-  // ...existing code...
-
   async validatePassword(
     password: string,
     hashedPassword: string,

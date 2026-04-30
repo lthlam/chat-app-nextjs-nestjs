@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RoomsService } from './rooms.service';
 import { MessagesGateway } from './messages.gateway';
+import { CreateRoomDto, UpdateRoomDto, AddMemberDto } from './dto/rooms.dto';
 
 @Controller('rooms')
 @UseGuards(AuthGuard('jwt'))
@@ -43,10 +44,7 @@ export class RoomsController {
   }
 
   @Post()
-  async createRoom(
-    @Request() req,
-    @Body() data: { name?: string; members: string[] },
-  ) {
+  async createRoom(@Request() req, @Body() data: CreateRoomDto) {
     const room = await this.roomsService.createRoom(
       data.name || null,
       req.user.id,
@@ -73,18 +71,12 @@ export class RoomsController {
   }
 
   @Put(':id')
-  async updateRoom(
-    @Param('id') roomId: string,
-    @Body() data: { name?: string; avatar_url?: string | null },
-  ) {
+  async updateRoom(@Param('id') roomId: string, @Body() data: UpdateRoomDto) {
     return this.roomsService.updateRoom(roomId, data);
   }
 
   @Post(':id/members')
-  async addMember(
-    @Param('id') roomId: string,
-    @Body() data: { user_id: string },
-  ) {
+  async addMember(@Param('id') roomId: string, @Body() data: AddMemberDto) {
     const room = await this.roomsService.addMember(roomId, data.user_id);
     const roomSummary = await this.roomsService.getRoomSummaryForUser(
       roomId,

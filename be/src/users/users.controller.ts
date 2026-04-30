@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { ChangePasswordDto } from './change-password.dto';
+import { UpdateUserDto } from './dto/users.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -38,7 +39,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  async updateProfile(@Param('id') id: string, @Body() data: any) {
+  async updateProfile(@Param('id') id: string, @Body() data: UpdateUserDto) {
     return this.usersService.updateProfile(id, data);
   }
 
