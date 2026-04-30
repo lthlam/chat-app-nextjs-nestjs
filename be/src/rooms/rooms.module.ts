@@ -11,7 +11,11 @@ import { RoomsService } from './rooms.service';
 import { RoomsController } from './rooms.controller';
 import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
-import { MessagesGateway } from './messages.gateway';
+import { SocketStateService } from './socket-state.service';
+import { PresenceGateway } from './presence.gateway';
+import { ChatGateway } from './chat.gateway';
+import { RoomEventsGateway } from './room-events.gateway';
+import { CallGateway } from './call.gateway';
 import { User } from '../users/user.entity';
 import { BlockedUser } from '../users/blocked-user.entity';
 import { UsersModule } from '../users/users.module';
@@ -40,8 +44,23 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
     UsersModule,
     CloudinaryModule,
   ],
-  providers: [RoomsService, MessagesService, MessagesGateway],
+  providers: [
+    RoomsService,
+    MessagesService,
+    SocketStateService,
+    PresenceGateway,
+    ChatGateway,
+    RoomEventsGateway,
+    CallGateway,
+  ],
   controllers: [RoomsController, MessagesController],
-  exports: [RoomsService, MessagesService, MessagesGateway],
+  exports: [
+    RoomsService,
+    MessagesService,
+    PresenceGateway,
+    ChatGateway,
+    RoomEventsGateway,
+    CallGateway,
+  ],
 })
 export class RoomsModule {}

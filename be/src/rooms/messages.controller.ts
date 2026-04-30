@@ -15,7 +15,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MessagesService } from './messages.service';
-import { MessagesGateway } from './messages.gateway';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 @Controller('messages')
@@ -23,7 +22,6 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 export class MessagesController {
   constructor(
     private messagesService: MessagesService,
-    private messagesGateway: MessagesGateway,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -107,14 +105,7 @@ export class MessagesController {
 
   @Post(':messageId/delivered')
   async markAsDelivered(@Param('messageId') messageId: string) {
-    const updatedMessage =
-      await this.messagesService.markMessageAsDelivered(messageId);
-    if (updatedMessage) {
-      this.messagesGateway.server
-        .to(`room-${updatedMessage.room.id}`)
-        .emit('message-updated', updatedMessage);
-    }
-    return updatedMessage;
+    return this.messagesService.markMessageAsDelivered(messageId);
   }
 
   @Get(':roomId/search')
@@ -159,37 +150,18 @@ export class MessagesController {
     @Request() req,
     @Body() data: { content: string; replyToMessageId?: string; type?: any },
   ) {
-    const message = await this.messagesService.sendMessage(
+    return this.messagesService.sendMessage(
       roomId,
       req.user.id,
       data.content,
       data.replyToMessageId,
       data.type,
     );
-
-    if (message) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('new-message', message);
-    }
-
-    return message;
   }
 
   @Post(':roomId/read')
   async markRoomAsSeen(@Param('roomId') roomId: string, @Request() req) {
-    const seenPayload = await this.messagesService.markRoomAsSeen(
-      roomId,
-      req.user.id,
-    );
-
-    if ((seenPayload.updatedMessages || []).length > 0) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('messages-seen', seenPayload);
-    }
-
-    return seenPayload;
+    return this.messagesService.markRoomAsSeen(roomId, req.user.id);
   }
 
   @Put(':messageId')
@@ -202,16 +174,7 @@ export class MessagesController {
 
   @Delete(':messageId')
   async deleteMessage(@Param('messageId') messageId: string) {
-    const updatedMessage = await this.messagesService.deleteMessage(messageId);
-
-    const roomId = (updatedMessage as any)?.room?.id;
-    if (roomId) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('message-updated', updatedMessage);
-    }
-
-    return updatedMessage;
+    return this.messagesService.deleteMessage(messageId);
   }
 
   @Post(':messageId/reactions')
@@ -220,57 +183,20 @@ export class MessagesController {
     @Request() req,
     @Body() data: { emoji: string },
   ) {
-    const updatedMessage = await this.messagesService.addReaction(
-      messageId,
-      req.user.id,
-      data.emoji,
-    );
-
-    const roomId = (updatedMessage as any)?.room?.id;
-    if (roomId) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('reaction-updated', updatedMessage);
-    }
-
-    return updatedMessage;
+    return this.messagesService.addReaction(messageId, req.user.id, data.emoji);
   }
 
   @Delete('reactions/:reactionId')
   async removeReaction(@Param('reactionId') reactionId: string) {
-    const updatedMessage =
-      await this.messagesService.removeReaction(reactionId);
-
-    const roomId = (updatedMessage as any)?.room?.id;
-    if (roomId) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('reaction-updated', updatedMessage);
-    }
-
-    return updatedMessage;
+    return this.messagesService.removeReaction(reactionId);
   }
 
   @Post(':messageId/pin')
   async pinMessage(@Param('messageId') messageId: string) {
-    const updatedMessage = await this.messagesService.pinMessage(messageId);
-    const roomId = (updatedMessage as any)?.room?.id;
-    if (roomId) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('message-updated', updatedMessage);
-    }
-    return updatedMessage;
+    return this.messagesService.pinMessage(messageId);
   }
   @Delete(':messageId/pin')
   async unpinMessage(@Param('messageId') messageId: string) {
-    const updatedMessage = await this.messagesService.unpinMessage(messageId);
-    const roomId = (updatedMessage as any)?.room?.id;
-    if (roomId) {
-      this.messagesGateway.server
-        .to(`room-${roomId}`)
-        .emit('message-updated', updatedMessage);
-    }
-    return updatedMessage;
+    return this.messagesService.unpinMessage(messageId);
   }
 }

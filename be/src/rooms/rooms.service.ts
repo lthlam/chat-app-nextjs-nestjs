@@ -174,7 +174,7 @@ export class RoomsService {
 
   async createRoom(name: string, ownerId: string, memberIds: string[]) {
     const owner = await this.usersRepository.findOneBy({ id: ownerId });
-    const members = await this.usersRepository.findByIds(memberIds);
+    const members = await this.usersRepository.findBy({ id: In(memberIds) });
 
     const room = this.roomsRepository.create({
       name,

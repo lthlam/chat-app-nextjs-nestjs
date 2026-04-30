@@ -4,6 +4,7 @@ import {
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThan, Repository, IsNull } from 'typeorm';
 import { Message } from './message.entity';
@@ -30,6 +31,7 @@ export class MessagesService implements OnModuleInit {
     @InjectRepository(RoomClearedHistory)
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
     private usersService: UsersService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async onModuleInit() {
@@ -417,8 +419,7 @@ export class MessagesService implements OnModuleInit {
 
     const savedMessage = await this.messagesRepository.save(message);
 
-    // Return with relations
-    return this.messagesRepository.findOne({
+    const finalMessage = await this.messagesRepository.findOne({
       where: { id: savedMessage.id },
       relations: [
         'room',
@@ -432,6 +433,13 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    this.eventEmitter.emit('message.sent', {
+      roomId,
+      message: finalMessage,
+    });
+
+    return finalMessage;
   }
 
   async markMessageAsDelivered(messageId: string) {
@@ -440,7 +448,7 @@ export class MessagesService implements OnModuleInit {
       await this.messagesRepository.update(messageId, {
         delivered_at: new Date(),
       });
-      return this.messagesRepository.findOne({
+      const updated = await this.messagesRepository.findOne({
         where: { id: messageId },
         relations: [
           'room',
@@ -454,6 +462,13 @@ export class MessagesService implements OnModuleInit {
           'reads.user',
         ],
       });
+      if (updated) {
+        this.eventEmitter.emit('message.updated', {
+          roomId: updated.room.id,
+          message: updated,
+        });
+      }
+      return updated;
     }
     return null;
   }
@@ -478,7 +493,7 @@ export class MessagesService implements OnModuleInit {
       delivered_at: now,
     });
 
-    return this.messagesRepository.find({
+    const updatedMessages = await this.messagesRepository.find({
       where: { id: In(ids) },
       relations: [
         'room',
@@ -491,11 +506,20 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updatedMessages.length > 0) {
+      this.eventEmitter.emit('message.room_delivered', {
+        roomId,
+        messages: updatedMessages,
+      });
+    }
+
+    return updatedMessages;
   }
 
   async editMessage(messageId: string, content: string) {
     await this.messagesRepository.update(messageId, { content });
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: [
         'room',
@@ -509,6 +533,15 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async deleteMessage(messageId: string) {
@@ -519,7 +552,7 @@ export class MessagesService implements OnModuleInit {
       is_pinned: false,
     });
 
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: [
         'room',
@@ -533,6 +566,15 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async addReaction(messageId: string, userId: string, emoji: string) {
@@ -560,8 +602,7 @@ export class MessagesService implements OnModuleInit {
       await this.reactionsRepository.save(reaction);
     }
 
-    // Return updated message with reactions
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: [
         'room',
@@ -575,6 +616,15 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.reaction_updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async removeReaction(reactionId: string) {
@@ -587,7 +637,7 @@ export class MessagesService implements OnModuleInit {
 
     await this.reactionsRepository.delete(reactionId);
 
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: reaction.message.id },
       relations: [
         'room',
@@ -601,6 +651,15 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.reaction_updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async searchMessages(roomId: string, userId: string, query: string) {
@@ -708,7 +767,7 @@ export class MessagesService implements OnModuleInit {
 
   async pinMessage(messageId: string) {
     await this.messagesRepository.update(messageId, { is_pinned: true });
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: [
         'room',
@@ -722,11 +781,20 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async unpinMessage(messageId: string) {
     await this.messagesRepository.update(messageId, { is_pinned: false });
-    return this.messagesRepository.findOne({
+    const updated = await this.messagesRepository.findOne({
       where: { id: messageId },
       relations: [
         'room',
@@ -740,6 +808,15 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+
+    if (updated) {
+      this.eventEmitter.emit('message.updated', {
+        roomId: updated.room.id,
+        message: updated,
+      });
+    }
+
+    return updated;
   }
 
   async markRoomAsSeen(roomId: string, userId: string) {
@@ -795,7 +872,7 @@ export class MessagesService implements OnModuleInit {
       order: { created_at: 'ASC' },
     });
 
-    return {
+    const seenPayload = {
       roomId,
       user: {
         id: user.id,
@@ -804,6 +881,10 @@ export class MessagesService implements OnModuleInit {
       },
       updatedMessages,
     };
+
+    this.eventEmitter.emit('message.seen', seenPayload);
+
+    return seenPayload;
   }
 
   async getMedia(roomId: string, userId: string) {
