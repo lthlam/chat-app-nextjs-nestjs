@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { MessagesGateway } from './messages.gateway';
 import { MessagesService } from './messages.service';
 import { UsersService } from '../users/users.service';
@@ -13,7 +13,7 @@ describe('MessagesGateway', () => {
   const mockJwtService = {};
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    await Test.createTestingModule({
       providers: [
         MessagesGateway,
         { provide: MessagesService, useValue: mockMessagesService },

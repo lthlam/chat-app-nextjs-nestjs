@@ -3,8 +3,6 @@ import {
   Injectable,
   NotFoundException,
   OnModuleInit,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThan, Repository, IsNull } from 'typeorm';
@@ -31,7 +29,6 @@ export class MessagesService implements OnModuleInit {
     private usersRepository: Repository<User>,
     @InjectRepository(RoomClearedHistory)
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
-    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
   ) {}
 

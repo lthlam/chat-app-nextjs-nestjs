@@ -12,7 +12,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
-    logger: new AppLogger()
+    logger: new AppLogger(),
   });
 
   // Setup Socket.IO adapter

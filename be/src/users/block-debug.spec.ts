@@ -6,22 +6,20 @@ import { BlockedUser } from './blocked-user.entity';
 import { FriendRequest } from '../friends/friend-request.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService.blockUser (Debug)', () => {
   let service: UsersService;
-  let dataSource: DataSource;
 
   const mockUser = { id: 'user-1' };
   const mockTarget = { id: 'user-2' };
 
   const mockManager = {
     findOne: jest.fn().mockImplementation((entity, options) => {
-        if (entity === User) {
-            if (options.where.id === 'user-1') return Promise.resolve(mockUser);
-            if (options.where.id === 'user-2') return Promise.resolve(mockTarget);
-        }
-        return Promise.resolve(null);
+      if (entity === User) {
+        if (options.where.id === 'user-1') return Promise.resolve(mockUser);
+        if (options.where.id === 'user-2') return Promise.resolve(mockTarget);
+      }
+      return Promise.resolve(null);
     }),
     delete: jest.fn().mockResolvedValue({}),
     create: jest.fn().mockImplementation((entity, data) => data),
@@ -49,7 +47,7 @@ describe('UsersService.blockUser (Debug)', () => {
 
   it('should block user and delete friend requests', async () => {
     const result = await service.blockUser('user-1', 'user-2');
-    
+
     expect(result.blocker.id).toBe('user-1');
     expect(result.blocked.id).toBe('user-2');
     expect(mockManager.delete).toHaveBeenCalledWith(FriendRequest, [

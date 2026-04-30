@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Post,
@@ -12,16 +11,12 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RoomsService } from './rooms.service';
-import { MessagesGateway } from './messages.gateway';
 import { CreateRoomDto, UpdateRoomDto, AddMemberDto } from './dto/rooms.dto';
 
 @Controller('rooms')
 @UseGuards(AuthGuard('jwt'))
 export class RoomsController {
-  constructor(
-    private roomsService: RoomsService,
-    private messagesGateway: MessagesGateway,
-  ) {}
+  constructor(private roomsService: RoomsService) {}
 
   @Get()
   async getRooms(@Request() req) {
@@ -45,29 +40,11 @@ export class RoomsController {
 
   @Post()
   async createRoom(@Request() req, @Body() data: CreateRoomDto) {
-    const room = await this.roomsService.createRoom(
+    return this.roomsService.createRoom(
       data.name || null,
       req.user.id,
       data.members || [],
     );
-
-    const invitedUserIds = [
-      ...new Set((data.members || []).map(String)),
-    ].filter((memberId) => memberId !== String(req.user.id));
-
-    await Promise.all(
-      invitedUserIds.map(async (memberId) => {
-        const roomSummary = await this.roomsService.getRoomSummaryForUser(
-          room.id,
-          memberId,
-        );
-        if (roomSummary) {
-          this.messagesGateway.notifyUserAddedToRoom(memberId, roomSummary);
-        }
-      }),
-    );
-
-    return room;
   }
 
   @Put(':id')
@@ -77,17 +54,7 @@ export class RoomsController {
 
   @Post(':id/members')
   async addMember(@Param('id') roomId: string, @Body() data: AddMemberDto) {
-    const room = await this.roomsService.addMember(roomId, data.user_id);
-    const roomSummary = await this.roomsService.getRoomSummaryForUser(
-      roomId,
-      data.user_id,
-    );
-
-    if (roomSummary) {
-      this.messagesGateway.notifyUserAddedToRoom(data.user_id, roomSummary);
-    }
-
-    return room;
+    return this.roomsService.addMember(roomId, data.user_id);
   }
 
   @Delete(':id/members/:userId')
@@ -96,24 +63,7 @@ export class RoomsController {
     @Param('id') roomId: string,
     @Param('userId') userId: string,
   ) {
-    if (String(req.user.id) === String(userId)) {
-      throw new BadRequestException(
-        'Khong the tu xoa chinh minh. Hay dung chuc nang roi nhom.',
-      );
-    }
-
-    const room = await this.roomsService.removeMemberByOwner(
-      roomId,
-      userId,
-      req.user.id,
-    );
-    this.messagesGateway.notifyUserRemovedFromRoom(
-      roomId,
-      userId,
-      'kicked',
-      room.owner,
-    );
-    return room;
+    return this.roomsService.removeMemberByOwner(roomId, userId, req.user.id);
   }
 
   @Delete(':id/history')
@@ -123,13 +73,6 @@ export class RoomsController {
 
   @Post(':id/leave')
   async leaveRoom(@Request() req, @Param('id') roomId: string) {
-    const room = await this.roomsService.removeMember(roomId, req.user.id);
-    this.messagesGateway.notifyUserRemovedFromRoom(
-      roomId,
-      req.user.id,
-      'left',
-      room.owner,
-    );
-    return room;
+    return this.roomsService.removeMember(roomId, req.user.id);
   }
 }

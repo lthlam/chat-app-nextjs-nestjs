@@ -12,8 +12,6 @@ import { MessagesService } from './messages.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   Injectable,
-  Inject,
-  forwardRef,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -48,7 +46,6 @@ export class MessagesGateway
 
   constructor(
     private messagesService: MessagesService,
-    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private roomsService: RoomsService,
     private jwtService: JwtService,
@@ -78,13 +75,9 @@ export class MessagesGateway
   }
 
   private getSocketIdsByUserId(userId: string): string[] {
-    const socketIds: string[] = [];
-    for (const [socketId, mappedUserId] of this.userSockets.entries()) {
-      if (mappedUserId === userId) {
-        socketIds.push(socketId);
-      }
-    }
-    return socketIds;
+    return Array.from(this.userSockets.entries())
+      .filter(([, id]) => id === userId)
+      .map(([socketId]) => socketId);
   }
 
   notifyUserRemovedFromRoom(
@@ -131,63 +124,40 @@ export class MessagesGateway
   }
 
   @OnEvent('friend.removed')
-  notifyFriendRemoved(payload: { userId: string; targetUserId: string }) {
+  handleFriendRemoved(payload: { userId: string; targetUserId: string }) {
     const { userId, targetUserId } = payload;
-    const socketIds = this.getSocketIdsByUserId(userId);
 
-    socketIds.forEach((socketId) => {
-      const socket = this.server.sockets.sockets.get(socketId);
-      if (!socket) return;
-      socket.emit('friend-removed', { friendId: targetUserId });
+    // Notify target
+    const targetSocketIds = this.getSocketIdsByUserId(targetUserId);
+    targetSocketIds.forEach((sid) => {
+      this.server.to(sid).emit('friend-removed', { userId });
+    });
+
+    // Notify sender
+    const senderSocketIds = this.getSocketIdsByUserId(userId);
+    senderSocketIds.forEach((sid) => {
+      this.server.to(sid).emit('friend-removed', { friendId: targetUserId });
     });
   }
 
   @OnEvent('friend.request.accepted')
   notifyFriendRequestAccepted(eventPayload: {
     targetId: string;
-    payload: {
-      requestId: string;
-      friend: {
-        id: string;
-        username?: string;
-        email?: string;
-        avatar_url?: string;
-        status?: string;
-      };
-    };
+    payload: any;
   }) {
     const { targetId, payload } = eventPayload;
     const socketIds = this.getSocketIdsByUserId(targetId);
-
-    socketIds.forEach((socketId) => {
-      const socket = this.server.sockets.sockets.get(socketId);
-      if (!socket) return;
-      socket.emit('friend-request-accepted', payload);
+    socketIds.forEach((sid) => {
+      this.server.to(sid).emit('friend-request-accepted', payload);
     });
   }
 
   @OnEvent('friend.request.received')
-  notifyFriendRequestReceived(eventPayload: {
-    receiverId: string;
-    data: {
-      requestId: string;
-      sender: {
-        id: string;
-        username?: string;
-        email?: string;
-        avatar_url?: string;
-        status?: string;
-      };
-      created_at?: Date;
-    };
-  }) {
+  notifyFriendRequestReceived(eventPayload: { receiverId: string; data: any }) {
     const { receiverId, data } = eventPayload;
     const socketIds = this.getSocketIdsByUserId(receiverId);
-
-    socketIds.forEach((socketId) => {
-      const socket = this.server.sockets.sockets.get(socketId);
-      if (!socket) return;
-      socket.emit('friend-request-received', data);
+    socketIds.forEach((sid) => {
+      this.server.to(sid).emit('friend-request-received', data);
     });
   }
 
@@ -206,6 +176,61 @@ export class MessagesGateway
     const socketIds = this.getSocketIdsByUserId(blockedId);
     socketIds.forEach((sid) => {
       this.server.to(sid).emit('user-unblocked', { blockerId });
+    });
+  }
+
+  @OnEvent('room.created')
+  async notifyRoomCreated(payload: {
+    room: any;
+    ownerId: string;
+    invitedMemberIds: string[];
+  }) {
+    const { room, invitedMemberIds } = payload;
+    await Promise.all(
+      invitedMemberIds.map(async (memberId) => {
+        const roomSummary = await this.roomsService.getRoomSummaryForUser(
+          room.id,
+          memberId,
+        );
+        if (roomSummary) {
+          this.notifyUserAddedToRoom(memberId, roomSummary);
+        }
+      }),
+    );
+  }
+
+  @OnEvent('room.member.added')
+  async notifyMemberAdded(payload: { roomId: string; userId: string }) {
+    const { roomId, userId } = payload;
+    const roomSummary = await this.roomsService.getRoomSummaryForUser(
+      roomId,
+      userId,
+    );
+    if (roomSummary) {
+      this.notifyUserAddedToRoom(userId, roomSummary);
+    }
+  }
+
+  @OnEvent('room.member.removed')
+  notifyMemberRemoved(payload: {
+    roomId: string;
+    userId: string;
+    reason: 'kicked' | 'left';
+    newOwner: any;
+  }) {
+    this.notifyUserRemovedFromRoom(
+      payload.roomId,
+      payload.userId,
+      payload.reason,
+      payload.newOwner,
+    );
+  }
+
+  @OnEvent('room.history.cleared')
+  notifyHistoryCleared(payload: { roomId: string; userId: string }) {
+    const socketIds = this.getSocketIdsByUserId(payload.userId);
+    socketIds.forEach((sid) => {
+      this.server.to(sid).emit('history-cleared', { roomId: payload.roomId });
     });
   }
 

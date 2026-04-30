@@ -5,6 +5,7 @@ import { Room } from './room.entity';
 import { Message } from './message.entity';
 import { User } from '../users/user.entity';
 import { RoomClearedHistory } from './entities/room-cleared-history.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class RoomsService {
@@ -17,6 +18,7 @@ export class RoomsService {
     private usersRepository: Repository<User>,
     @InjectRepository(RoomClearedHistory)
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async getRooms(userId: string) {
@@ -181,7 +183,18 @@ export class RoomsService {
       members: [owner, ...members],
     });
 
-    return this.roomsRepository.save(room);
+    const savedRoom = await this.roomsRepository.save(room);
+
+    const invitedMemberIds = [...new Set((memberIds || []).map(String))].filter(
+      (id) => id !== String(ownerId),
+    );
+
+    this.eventEmitter.emit('room.created', {
+      room: savedRoom,
+      ownerId,
+      invitedMemberIds,
+    });
+    return savedRoom;
   }
 
   async updateRoom(
@@ -221,6 +234,7 @@ export class RoomsService {
     if (!room.members.find((m) => m.id === userId)) {
       room.members.push(user);
       await this.roomsRepository.save(room);
+      this.eventEmitter.emit('room.member.added', { roomId, userId });
     }
 
     return room;
@@ -252,7 +266,12 @@ export class RoomsService {
     }
 
     await this.roomsRepository.save(room);
-
+    this.eventEmitter.emit('room.member.removed', {
+      roomId,
+      userId,
+      reason: 'left',
+      newOwner: room.owner,
+    });
     return room;
   }
 
@@ -272,7 +291,12 @@ export class RoomsService {
 
     room.members = room.members.filter((m) => String(m.id) !== String(userId));
     await this.roomsRepository.save(room);
-
+    this.eventEmitter.emit('room.member.removed', {
+      roomId,
+      userId,
+      reason: 'kicked',
+      newOwner: room.owner,
+    });
     return room;
   }
 
@@ -310,6 +334,7 @@ export class RoomsService {
     }
 
     await this.roomClearedHistoryRepository.save(history);
+    this.eventEmitter.emit('room.history.cleared', { roomId, userId });
     return history;
   }
 

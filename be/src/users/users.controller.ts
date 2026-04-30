@@ -7,8 +7,6 @@ import {
   Body,
   Param,
   UseGuards,
-  BadRequestException,
-  Query,
   Request,
   ParseUUIDPipe,
 } from '@nestjs/common';
@@ -17,6 +15,7 @@ import { UsersService } from './users.service';
 import { ChangePasswordDto } from './change-password.dto';
 import { UpdateUserDto } from './dto/users.dto';
 import { SearchUserDto } from './dto/search-user.dto';
+import { Query } from '@nestjs/common';
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
