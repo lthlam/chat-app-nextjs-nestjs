@@ -1,8 +1,7 @@
 import {
   Injectable,
-  Inject,
-  forwardRef,
   BadRequestException,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,7 +10,7 @@ import { User } from './user.entity';
 import { BlockedUser } from './blocked-user.entity';
 import { FriendRequest } from '../friends/friend-request.entity';
 import * as bcrypt from 'bcryptjs';
-import { MessagesGateway } from '../rooms/messages.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -30,8 +29,7 @@ export class UsersService implements OnModuleInit {
     private blockedUsersRepository: Repository<BlockedUser>,
     @InjectRepository(FriendRequest)
     private friendRequestRepository: Repository<FriendRequest>,
-    @Inject(forwardRef(() => MessagesGateway))
-    private readonly messagesGateway: MessagesGateway,
+    private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
   ) {}
 
@@ -101,7 +99,7 @@ export class UsersService implements OnModuleInit {
   ): Promise<void> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -109,7 +107,7 @@ export class UsersService implements OnModuleInit {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new Error('Current password is incorrect');
+      throw new BadRequestException('Current password is incorrect');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -134,7 +132,7 @@ export class UsersService implements OnModuleInit {
       const blocked = await manager.findOne(User, { where: { id: blockedId } });
 
       if (!blocker || !blocked) {
-        throw new Error('User not found');
+        throw new NotFoundException('User not found');
       }
 
       // Unfriend logic: find and remove any friend requests between them
@@ -151,7 +149,7 @@ export class UsersService implements OnModuleInit {
       const savedBlockedUser = await manager.save(blockedUser);
 
       // Notify the blocked user after DB success
-      this.messagesGateway.notifyUserBlocked(blockedId, blockerId);
+      this.eventEmitter.emit('user.blocked', { blockedId, blockerId });
 
       return savedBlockedUser;
     });
@@ -164,7 +162,7 @@ export class UsersService implements OnModuleInit {
     });
 
     // Notify the unblocked user
-    this.messagesGateway.notifyUserUnblocked(blockedId, blockerId);
+    this.eventEmitter.emit('user.unblocked', { blockedId, blockerId });
   }
 
   async isUserBlocked(blockerId: string, blockedId: string): Promise<boolean> {

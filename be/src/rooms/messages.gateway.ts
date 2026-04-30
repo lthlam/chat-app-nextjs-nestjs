@@ -10,13 +10,23 @@ import {
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
 import { JwtService } from '@nestjs/jwt';
-import { Injectable, Inject, forwardRef, UseGuards } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  forwardRef,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { UsersService } from '../users/users.service';
 import { RoomsService } from './rooms.service';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
+import { JoinRoomDto, SendMessageDto } from './dto/rooms.dto';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
+@UsePipes(new ValidationPipe())
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -120,18 +130,21 @@ export class MessagesGateway
     });
   }
 
-  notifyFriendRemoved(userId: string, friendId: string) {
+  @OnEvent('friend.removed')
+  notifyFriendRemoved(payload: { userId: string; targetUserId: string }) {
+    const { userId, targetUserId } = payload;
     const socketIds = this.getSocketIdsByUserId(userId);
 
     socketIds.forEach((socketId) => {
       const socket = this.server.sockets.sockets.get(socketId);
       if (!socket) return;
-      socket.emit('friend-removed', { friendId });
+      socket.emit('friend-removed', { friendId: targetUserId });
     });
   }
 
-  notifyFriendRequestAccepted(
-    userId: string,
+  @OnEvent('friend.request.accepted')
+  notifyFriendRequestAccepted(eventPayload: {
+    targetId: string;
     payload: {
       requestId: string;
       friend: {
@@ -141,9 +154,10 @@ export class MessagesGateway
         avatar_url?: string;
         status?: string;
       };
-    },
-  ) {
-    const socketIds = this.getSocketIdsByUserId(userId);
+    };
+  }) {
+    const { targetId, payload } = eventPayload;
+    const socketIds = this.getSocketIdsByUserId(targetId);
 
     socketIds.forEach((socketId) => {
       const socket = this.server.sockets.sockets.get(socketId);
@@ -152,9 +166,10 @@ export class MessagesGateway
     });
   }
 
-  notifyFriendRequestReceived(
-    userId: string,
-    payload: {
+  @OnEvent('friend.request.received')
+  notifyFriendRequestReceived(eventPayload: {
+    receiverId: string;
+    data: {
       requestId: string;
       sender: {
         id: string;
@@ -164,25 +179,30 @@ export class MessagesGateway
         status?: string;
       };
       created_at?: Date;
-    },
-  ) {
-    const socketIds = this.getSocketIdsByUserId(userId);
+    };
+  }) {
+    const { receiverId, data } = eventPayload;
+    const socketIds = this.getSocketIdsByUserId(receiverId);
 
     socketIds.forEach((socketId) => {
       const socket = this.server.sockets.sockets.get(socketId);
       if (!socket) return;
-      socket.emit('friend-request-received', payload);
+      socket.emit('friend-request-received', data);
     });
   }
 
-  notifyUserBlocked(blockedId: string, blockerId: string) {
+  @OnEvent('user.blocked')
+  notifyUserBlocked(payload: { blockedId: string; blockerId: string }) {
+    const { blockedId, blockerId } = payload;
     const socketIds = this.getSocketIdsByUserId(blockedId);
     socketIds.forEach((sid) => {
       this.server.to(sid).emit('user-blocked', { blockerId });
     });
   }
 
-  notifyUserUnblocked(blockedId: string, blockerId: string) {
+  @OnEvent('user.unblocked')
+  notifyUserUnblocked(payload: { blockedId: string; blockerId: string }) {
+    const { blockedId, blockerId } = payload;
     const socketIds = this.getSocketIdsByUserId(blockedId);
     socketIds.forEach((sid) => {
       this.server.to(sid).emit('user-unblocked', { blockerId });
@@ -253,7 +273,7 @@ export class MessagesGateway
   @SubscribeMessage('join-room')
   async handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string; userId?: string },
+    @MessageBody() data: JoinRoomDto,
   ) {
     // Keep authenticated user id from handleConnection; only fallback to payload if needed
     const userId = this.userSockets.get(client.id) || data.userId;
@@ -291,14 +311,7 @@ export class MessagesGateway
   @SubscribeMessage('send-message')
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody()
-    data: {
-      roomId: string;
-      content: string;
-      replyToMessageId?: string;
-      type?: any;
-      mentions?: string[];
-    },
+    @MessageBody() data: SendMessageDto,
   ) {
     const userId = this.userSockets.get(client.id);
 

@@ -7,7 +7,6 @@ import { instanceToPlain } from 'class-transformer';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  let service: UsersService;
 
   const mockUser = Object.assign(new User(), {
     id: 'uuid',
@@ -45,7 +44,6 @@ describe('UsersController', () => {
       .compile();
 
     controller = module.get<UsersController>(UsersController);
-    service = module.get<UsersService>(UsersService);
   });
 
   it('should not return password in profile', async () => {

@@ -1,14 +1,12 @@
 import {
   Injectable,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FriendRequest, FriendRequestStatus } from './friend-request.entity';
 import { User } from '../users/user.entity';
-import { MessagesGateway } from '../rooms/messages.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -18,8 +16,7 @@ export class FriendsService {
     private friendRequestRepository: Repository<FriendRequest>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private messagesGateway: MessagesGateway,
-    @Inject(forwardRef(() => UsersService))
+    private eventEmitter: EventEmitter2,
     private usersService: UsersService,
   ) {}
 
@@ -61,16 +58,19 @@ export class FriendsService {
       existing.status = FriendRequestStatus.PENDING;
       const saved = await this.friendRequestRepository.save(existing);
 
-      this.messagesGateway.notifyFriendRequestReceived(receiverId, {
-        requestId: saved.id,
-        sender: {
-          id: sender.id,
-          username: sender.username,
-          email: sender.email,
-          avatar_url: sender.avatar_url,
-          status: sender.status,
+      this.eventEmitter.emit('friend.request.received', {
+        receiverId,
+        data: {
+          requestId: saved.id,
+          sender: {
+            id: sender.id,
+            username: sender.username,
+            email: sender.email,
+            avatar_url: sender.avatar_url,
+            status: sender.status,
+          },
+          created_at: saved.created_at,
         },
-        created_at: saved.created_at,
       });
 
       return saved;
@@ -86,16 +86,19 @@ export class FriendsService {
 
     const saved = await this.friendRequestRepository.save(request);
 
-    this.messagesGateway.notifyFriendRequestReceived(receiverId, {
-      requestId: saved.id,
-      sender: {
-        id: sender.id,
-        username: sender.username,
-        email: sender.email,
-        avatar_url: sender.avatar_url,
-        status: sender.status,
+    this.eventEmitter.emit('friend.request.received', {
+      receiverId,
+      data: {
+        requestId: saved.id,
+        sender: {
+          id: sender.id,
+          username: sender.username,
+          email: sender.email,
+          avatar_url: sender.avatar_url,
+          status: sender.status,
+        },
+        created_at: saved.created_at,
       },
-      created_at: saved.created_at,
     });
 
     return saved;
@@ -137,13 +140,13 @@ export class FriendsService {
       status: request.receiver.status,
     };
 
-    this.messagesGateway.notifyFriendRequestAccepted(request.sender.id, {
-      requestId: savedRequest.id,
-      friend: receiverSummary,
+    this.eventEmitter.emit('friend.request.accepted', {
+      targetId: request.sender.id,
+      payload: { requestId: savedRequest.id, friend: receiverSummary },
     });
-    this.messagesGateway.notifyFriendRequestAccepted(request.receiver.id, {
-      requestId: savedRequest.id,
-      friend: senderSummary,
+    this.eventEmitter.emit('friend.request.accepted', {
+      targetId: request.receiver.id,
+      payload: { requestId: savedRequest.id, friend: senderSummary },
     });
 
     return savedRequest;
@@ -228,8 +231,11 @@ export class FriendsService {
 
     await this.friendRequestRepository.remove(request);
 
-    this.messagesGateway.notifyFriendRemoved(userId, targetUserId);
-    this.messagesGateway.notifyFriendRemoved(targetUserId, userId);
+    this.eventEmitter.emit('friend.removed', { userId, targetUserId });
+    this.eventEmitter.emit('friend.removed', {
+      userId: targetUserId,
+      targetUserId: userId,
+    });
 
     return { message: 'Friend removed successfully' };
   }

@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsArray,
-  IsOptional,
-  IsNotEmpty,
-  IsUrl,
-} from 'class-validator';
+import { IsString, IsArray, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateRoomDto {
   @IsString()
@@ -21,7 +15,6 @@ export class UpdateRoomDto {
   @IsOptional()
   name?: string;
 
-  @IsUrl()
   @IsOptional()
   avatar_url?: string;
 }
@@ -30,4 +23,36 @@ export class AddMemberDto {
   @IsString()
   @IsNotEmpty()
   user_id: string;
+}
+
+export class JoinRoomDto {
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+
+  @IsString()
+  @IsOptional()
+  userId?: string;
+}
+
+export class SendMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  roomId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @IsOptional()
+  @IsString()
+  replyToMessageId?: string;
+
+  @IsOptional()
+  type?: any;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  mentions?: string[];
 }

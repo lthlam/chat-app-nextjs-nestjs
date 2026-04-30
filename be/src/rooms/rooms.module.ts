@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -37,7 +37,7 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
         signOptions: { expiresIn: '24h' },
       }),
     }),
-    forwardRef(() => UsersModule),
+    UsersModule,
     CloudinaryModule,
   ],
   providers: [RoomsService, MessagesService, MessagesGateway],

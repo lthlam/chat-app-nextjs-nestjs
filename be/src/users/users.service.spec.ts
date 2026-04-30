@@ -4,12 +4,12 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { BlockedUser } from './blocked-user.entity';
 import { FriendRequest } from '../friends/friend-request.entity';
-import { MessagesGateway } from '../rooms/messages.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let dataSource: DataSource;
 
   const mockUsersRepository = {
     findOneBy: jest.fn(),
@@ -25,12 +25,18 @@ describe('UsersService', () => {
   const mockFriendRequestRepository = {
     delete: jest.fn(),
   };
-  const mockMessagesGateway = {
-    notifyUserBlocked: jest.fn(),
-    notifyUserUnblocked: jest.fn(),
+  const mockEventEmitter = {
+    emit: jest.fn(),
   };
   const mockDataSource = {
-    transaction: jest.fn(),
+    transaction: jest.fn().mockImplementation((cb) =>
+      cb({
+        findOne: jest.fn().mockResolvedValue({ id: '1' }),
+        delete: jest.fn(),
+        create: jest.fn().mockReturnValue({}),
+        save: jest.fn().mockResolvedValue({ id: 'block-id' }),
+      }),
+    ),
   };
 
   beforeEach(async () => {
@@ -46,20 +52,32 @@ describe('UsersService', () => {
           provide: getRepositoryToken(FriendRequest),
           useValue: mockFriendRequestRepository,
         },
-        { provide: MessagesGateway, useValue: mockMessagesGateway },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    dataSource = module.get<DataSource>(DataSource);
   });
 
-  it('should use a transaction to block a user', async () => {
-    mockUsersRepository.findOneBy.mockResolvedValue({ id: '1' });
-
+  it('should emit user.blocked event when blocking a user', async () => {
     await service.blockUser('1', '2');
 
-    expect(mockDataSource.transaction).toHaveBeenCalled();
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'user.blocked',
+      expect.objectContaining({ blockerId: '1', blockedId: '2' }),
+    );
+  });
+
+  it('should throw NotFoundException if user not found', async () => {
+    mockDataSource.transaction.mockImplementationOnce((cb) =>
+      cb({
+        findOne: jest.fn().mockResolvedValue(null),
+      }),
+    );
+
+    await expect(service.blockUser('1', '2')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

@@ -10,11 +10,13 @@ import {
   BadRequestException,
   Query,
   Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { ChangePasswordDto } from './change-password.dto';
 import { UpdateUserDto } from './dto/users.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
@@ -22,51 +24,54 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get('search')
-  async search(@Query('q') query: string) {
-    if (!query) return [];
-    return this.usersService.search(query);
+  async search(@Query() query: SearchUserDto) {
+    return this.usersService.search(query.q);
   }
 
   @Get('find-exact')
-  async getExact(@Query('q') query: string) {
-    if (!query) return null;
-    return this.usersService.findExact(query);
+  async getExact(@Query() query: SearchUserDto) {
+    return this.usersService.findExact(query.q);
   }
 
-  @Get(':id(^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)')
-  async getProfile(@Param('id') id: string) {
+  @Get(':id')
+  async getProfile(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findById(id);
   }
 
   @Put(':id')
-  async updateProfile(@Param('id') id: string, @Body() data: UpdateUserDto) {
+  async updateProfile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: UpdateUserDto,
+  ) {
     return this.usersService.updateProfile(id, data);
   }
 
   @Put(':id/password')
   async changePassword(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ChangePasswordDto,
   ) {
-    try {
-      await this.usersService.changePassword(
-        id,
-        dto.currentPassword,
-        dto.newPassword,
-      );
-      return { message: 'Password changed successfully' };
-    } catch (error: any) {
-      throw new BadRequestException(error.message);
-    }
+    await this.usersService.changePassword(
+      id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+    return { message: 'Password changed successfully' };
   }
 
   @Post(':id/block')
-  async blockUser(@Request() req, @Param('id') blockedId: string) {
+  async blockUser(
+    @Request() req,
+    @Param('id', ParseUUIDPipe) blockedId: string,
+  ) {
     return this.usersService.blockUser(req.user.id, blockedId);
   }
 
   @Delete(':id/block')
-  async unblockUser(@Request() req, @Param('id') blockedId: string) {
+  async unblockUser(
+    @Request() req,
+    @Param('id', ParseUUIDPipe) blockedId: string,
+  ) {
     await this.usersService.unblockUser(req.user.id, blockedId);
     return { message: 'User unblocked' };
   }

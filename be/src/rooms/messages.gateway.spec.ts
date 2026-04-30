@@ -7,8 +7,6 @@ import { JwtService } from '@nestjs/jwt';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 
 describe('MessagesGateway', () => {
-  let gateway: MessagesGateway;
-
   const mockMessagesService = {};
   const mockUsersService = {};
   const mockRoomsService = {};
@@ -24,8 +22,6 @@ describe('MessagesGateway', () => {
         { provide: JwtService, useValue: mockJwtService },
       ],
     }).compile();
-
-    gateway = module.get<MessagesGateway>(MessagesGateway);
   });
 
   it('should have WsJwtGuard applied', () => {

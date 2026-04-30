@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FriendsService } from './friends.service';
@@ -27,7 +28,10 @@ export class FriendsController {
   }
 
   @Get('check/:userId')
-  async checkFriend(@Param('userId') userId: string, @Request() req) {
+  async checkFriend(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req,
+  ) {
     const areFriends = await this.friendsService.areFriends(
       req.user.id,
       userId,
@@ -36,27 +40,39 @@ export class FriendsController {
   }
 
   @Post('request/:userId')
-  async sendRequest(@Param('userId') userId: string, @Request() req) {
+  async sendRequest(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req,
+  ) {
     return this.friendsService.sendFriendRequest(req.user.id, userId);
   }
 
   @Put('request/:requestId/accept')
-  async acceptRequest(@Param('requestId') requestId: string, @Request() req) {
+  async acceptRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @Request() req,
+  ) {
     return this.friendsService.acceptFriendRequest(requestId, req.user.id);
   }
 
   @Put('request/:requestId/reject')
-  async rejectRequest(@Param('requestId') requestId: string) {
+  async rejectRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
     return this.friendsService.rejectFriendRequest(requestId);
   }
 
   @Get('status/:userId')
-  async getFriendshipStatus(@Param('userId') userId: string, @Request() req) {
+  async getFriendshipStatus(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req,
+  ) {
     return this.friendsService.getFriendshipStatus(req.user.id, userId);
   }
 
   @Delete(':userId')
-  async removeFriend(@Param('userId') userId: string, @Request() req) {
+  async removeFriend(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Request() req,
+  ) {
     return this.friendsService.removeFriend(req.user.id, userId);
   }
 }
