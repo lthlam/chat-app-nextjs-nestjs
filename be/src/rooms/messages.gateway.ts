@@ -10,11 +10,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
 import { JwtService } from '@nestjs/jwt';
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, UseGuards } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { RoomsService } from './rooms.service';
+import { WsJwtGuard } from '../auth/ws-jwt.guard';
 
 @Injectable()
+@UseGuards(WsJwtGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',

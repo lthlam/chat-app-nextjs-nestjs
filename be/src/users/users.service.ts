@@ -6,7 +6,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { User } from './user.entity';
 import { BlockedUser } from './blocked-user.entity';
 import { FriendRequest } from '../friends/friend-request.entity';
@@ -32,6 +32,7 @@ export class UsersService implements OnModuleInit {
     private friendRequestRepository: Repository<FriendRequest>,
     @Inject(forwardRef(() => MessagesGateway))
     private readonly messagesGateway: MessagesGateway,
+    private dataSource: DataSource,
   ) {}
 
   async create(
@@ -128,28 +129,32 @@ export class UsersService implements OnModuleInit {
   }
 
   async blockUser(blockerId: string, blockedId: string): Promise<BlockedUser> {
-    const blocker = await this.findById(blockerId);
-    const blocked = await this.findById(blockedId);
+    return this.dataSource.transaction(async (manager) => {
+      const blocker = await manager.findOne(User, { where: { id: blockerId } });
+      const blocked = await manager.findOne(User, { where: { id: blockedId } });
 
-    if (!blocker || !blocked) {
-      throw new Error('User not found');
-    }
+      if (!blocker || !blocked) {
+        throw new Error('User not found');
+      }
 
-    // Unfriend logic: find and remove any friend requests between them
-    await this.friendRequestRepository.delete([
-      { sender: { id: blockerId }, receiver: { id: blockedId } },
-      { sender: { id: blockedId }, receiver: { id: blockerId } },
-    ]);
+      // Unfriend logic: find and remove any friend requests between them
+      await manager.delete(FriendRequest, [
+        { sender: { id: blockerId }, receiver: { id: blockedId } },
+        { sender: { id: blockedId }, receiver: { id: blockerId } },
+      ]);
 
-    const blockedUser = this.blockedUsersRepository.create({
-      blocker,
-      blocked,
+      const blockedUser = manager.create(BlockedUser, {
+        blocker,
+        blocked,
+      });
+
+      const savedBlockedUser = await manager.save(blockedUser);
+
+      // Notify the blocked user after DB success
+      this.messagesGateway.notifyUserBlocked(blockedId, blockerId);
+
+      return savedBlockedUser;
     });
-
-    // Notify the blocked user
-    this.messagesGateway.notifyUserBlocked(blockedId, blockerId);
-
-    return this.blockedUsersRepository.save(blockedUser);
   }
 
   async unblockUser(blockerId: string, blockedId: string): Promise<void> {
