@@ -3,7 +3,10 @@ import {
   Injectable,
   NotFoundException,
   OnModuleInit,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, MoreThan, Repository, IsNull, DataSource } from 'typeorm';
@@ -33,6 +36,7 @@ export class MessagesService implements OnModuleInit {
     private usersService: UsersService,
     private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async onModuleInit() {
@@ -440,6 +444,8 @@ export class MessagesService implements OnModuleInit {
       message: finalMessage,
     });
 
+    await this.invalidateCacheForMembers(room.members);
+
     return finalMessage;
   }
 
@@ -479,7 +485,6 @@ export class MessagesService implements OnModuleInit {
       const undeliveredMessages = await manager
         .getRepository(Message)
         .createQueryBuilder('message')
-        .setLock('pessimistic_write')
         .where('message.roomId = :roomId', { roomId })
         .andWhere('message.senderId != :userId', { userId })
         .andWhere('message.delivered_at IS NULL')
@@ -527,6 +532,7 @@ export class MessagesService implements OnModuleInit {
       where: { id: messageId },
       relations: [
         'room',
+        'room.members',
         'sender',
         'reply_to',
         'reply_to.sender',
@@ -543,6 +549,7 @@ export class MessagesService implements OnModuleInit {
         roomId: updated.room.id,
         message: updated,
       });
+      await this.invalidateCacheForMembers(updated.room.members);
     }
 
     return updated;
@@ -560,6 +567,7 @@ export class MessagesService implements OnModuleInit {
       where: { id: messageId },
       relations: [
         'room',
+        'room.members',
         'sender',
         'reply_to',
         'reply_to.sender',
@@ -576,6 +584,7 @@ export class MessagesService implements OnModuleInit {
         roomId: updated.room.id,
         message: updated,
       });
+      await this.invalidateCacheForMembers(updated.room.members);
     }
 
     return updated;
@@ -592,7 +601,6 @@ export class MessagesService implements OnModuleInit {
           'reads',
           'reads.user',
         ],
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!message) throw new NotFoundException('Message not found');
@@ -850,7 +858,6 @@ export class MessagesService implements OnModuleInit {
       const unreadMessages = await manager
         .getRepository(Message)
         .createQueryBuilder('message')
-        .setLock('pessimistic_write')
         .leftJoin('message.reads', 'read', 'read.userId = :userId', { userId })
         .where('message.roomId = :roomId', { roomId })
         .andWhere('message.senderId != :userId', { userId })
@@ -1054,5 +1061,12 @@ export class MessagesService implements OnModuleInit {
         'reads.user',
       ],
     });
+  }
+
+  private async invalidateCacheForMembers(members: User[]) {
+    if (!members) return;
+    await Promise.all(
+      members.map((m) => this.cacheManager.del(`user_rooms_${m.id}`)),
+    );
   }
 }

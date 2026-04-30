@@ -1,4 +1,6 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, DataSource } from 'typeorm';
 import { Room } from './room.entity';
@@ -20,9 +22,14 @@ export class RoomsService {
     private roomClearedHistoryRepository: Repository<RoomClearedHistory>,
     private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async getRooms(userId: string) {
+    const cacheKey = `user_rooms_${userId}`;
+    const cached = await this.cacheManager.get<any[]>(cacheKey);
+    if (cached) return cached;
+
     const rooms = await this.roomsRepository
       .createQueryBuilder('room')
       // Filter rooms by membership of current user
@@ -40,6 +47,7 @@ export class RoomsService {
       .getMany();
 
     if (rooms.length === 0) {
+      await this.cacheManager.set(cacheKey, [], 60000); // 1 min cache for empty
       return [];
     }
 
@@ -136,7 +144,7 @@ export class RoomsService {
         return lastMessageMs > clearedAtMs;
       });
 
-    return enrichedRooms.sort((a: any, b: any) => {
+    const sortedRooms = enrichedRooms.sort((a: any, b: any) => {
       const aTime = a?.last_message?.created_at
         ? new Date(a.last_message.created_at).getTime()
         : new Date(a.updated_at).getTime();
@@ -145,6 +153,9 @@ export class RoomsService {
         : new Date(b.updated_at).getTime();
       return bTime - aTime;
     });
+
+    await this.cacheManager.set(cacheKey, sortedRooms, 300000); // 5 min cache
+    return sortedRooms;
   }
 
   async getRoomSummaryForUser(roomId: string, userId: string) {
@@ -200,6 +211,9 @@ export class RoomsService {
         ownerId,
         invitedMemberIds,
       });
+
+      await this.invalidateCacheForMembers(savedRoom.members);
+
       return savedRoom;
     });
   }
@@ -221,7 +235,9 @@ export class RoomsService {
       room.avatar_url = data.avatar_url;
     }
 
-    return this.roomsRepository.save(room);
+    const saved = await this.roomsRepository.save(room);
+    await this.invalidateCacheForMembers(room.members);
+    return saved;
   }
 
   async addMember(roomId: string, userId: string) {
@@ -229,7 +245,6 @@ export class RoomsService {
       const room = await manager.getRepository(Room).findOne({
         where: { id: roomId },
         relations: ['members'],
-        lock: { mode: 'pessimistic_write' },
       });
       const user = await manager.getRepository(User).findOneBy({ id: userId });
 
@@ -244,6 +259,7 @@ export class RoomsService {
         room.members.push(user);
         await manager.getRepository(Room).save(room);
         this.eventEmitter.emit('room.member.added', { roomId, userId });
+        await this.invalidateCacheForMembers(room.members);
       }
 
       return room;
@@ -255,7 +271,6 @@ export class RoomsService {
       const room = await manager.getRepository(Room).findOne({
         where: { id: roomId },
         relations: ['owner', 'members'],
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!room) {
@@ -284,6 +299,12 @@ export class RoomsService {
         reason: 'left',
         newOwner: room.owner,
       });
+
+      await this.invalidateCacheForMembers([
+        ...room.members,
+        { id: userId } as any,
+      ]);
+
       return room;
     });
   }
@@ -293,7 +314,6 @@ export class RoomsService {
       const room = await manager.getRepository(Room).findOne({
         where: { id: roomId },
         relations: ['owner', 'members'],
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!room) {
@@ -316,6 +336,12 @@ export class RoomsService {
         reason: 'kicked',
         newOwner: room.owner,
       });
+
+      await this.invalidateCacheForMembers([
+        ...room.members,
+        { id: userId } as any,
+      ]);
+
       return room;
     });
   }
@@ -353,9 +379,10 @@ export class RoomsService {
       });
     }
 
-    await this.roomClearedHistoryRepository.save(history);
+    const saved = await this.roomClearedHistoryRepository.save(history);
+    await this.cacheManager.del(`user_rooms_${userId}`);
     this.eventEmitter.emit('room.history.cleared', { roomId, userId });
-    return history;
+    return saved;
   }
 
   getIceServers() {
@@ -383,5 +410,12 @@ export class RoomsService {
         credential: process.env.METERED_TURN_CREDENTIAL,
       },
     ];
+  }
+
+  private async invalidateCacheForMembers(members: User[]) {
+    if (!members) return;
+    await Promise.all(
+      members.map((m) => this.cacheManager.del(`user_rooms_${m.id}`)),
+    );
   }
 }
