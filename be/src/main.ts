@@ -7,6 +7,8 @@ import { AppLogger } from './common/logger/app.logger';
 import * as dotenv from 'dotenv';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 dotenv.config();
 
@@ -37,6 +39,9 @@ async function bootstrap() {
   );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  app.use(helmet());
+  app.use(compression());
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
