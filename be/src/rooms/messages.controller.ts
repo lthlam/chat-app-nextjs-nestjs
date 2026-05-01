@@ -15,13 +15,23 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MessagesService } from './messages.service';
+import { MessagesSearchService } from './services/messages-search.service';
+import { MessagesReactionService } from './services/messages-reaction.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import {
+  SendMessageDto,
+  UpdateMessageDto,
+  AddReactionDto,
+  ForwardMessageDto,
+} from './dto/rooms.dto';
 @Controller('messages')
 @UseGuards(AuthGuard('jwt'))
 export class MessagesController {
   constructor(
     private messagesService: MessagesService,
+    private searchService: MessagesSearchService,
+    private reactionService: MessagesReactionService,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -54,7 +64,7 @@ export class MessagesController {
   @Get('global-search')
   async globalSearch(@Request() req, @Query('q') query: string) {
     if (!query) throw new BadRequestException('Query is required');
-    return this.messagesService.globalSearch(req.user.id, query);
+    return this.searchService.globalSearch(req.user.id, query);
   }
 
   @Get(':roomId')
@@ -65,7 +75,7 @@ export class MessagesController {
     @Query('beforeId') beforeId?: string,
     @Query('afterId') afterId?: string,
   ) {
-    return this.messagesService.getMessages(
+    return this.searchService.getMessages(
       req.user.id,
       roomId,
       parseInt(limit, 10),
@@ -105,7 +115,7 @@ export class MessagesController {
 
   @Post(':messageId/delivered')
   async markAsDelivered(@Param('messageId') messageId: string) {
-    return this.messagesService.markMessageAsDelivered(messageId);
+    return this.reactionService.markMessageAsDelivered(messageId);
   }
 
   @Get(':roomId/search')
@@ -114,12 +124,12 @@ export class MessagesController {
     @Param('roomId') roomId: string,
     @Query('q') query: string,
   ) {
-    return this.messagesService.searchMessages(roomId, req.user.id, query);
+    return this.searchService.searchMessages(roomId, req.user.id, query);
   }
 
   @Get(':roomId/pinned')
   async getPinnedMessages(@Request() req, @Param('roomId') roomId: string) {
-    return this.messagesService.getPinnedMessages(roomId, req.user.id);
+    return this.searchService.getPinnedMessages(roomId, req.user.id);
   }
 
   @Get(':roomId/around/:messageId')
@@ -130,7 +140,7 @@ export class MessagesController {
     @Query('limit') limit: string = '20',
     @Query('direction') direction: 'around' | 'forward' | 'backward' = 'around',
   ) {
-    return this.messagesService.getMessagesAround(
+    return this.searchService.getMessagesAround(
       req.user.id,
       roomId,
       messageId,
@@ -141,14 +151,14 @@ export class MessagesController {
 
   @Get(':roomId/media')
   async getMedia(@Request() req, @Param('roomId') roomId: string) {
-    return this.messagesService.getMedia(roomId, req.user.id);
+    return this.searchService.getMedia(roomId, req.user.id);
   }
 
   @Post(':roomId')
   async sendMessage(
     @Param('roomId') roomId: string,
     @Request() req,
-    @Body() data: { content: string; replyToMessageId?: string; type?: any },
+    @Body() data: SendMessageDto,
   ) {
     return this.messagesService.sendMessage(
       roomId,
@@ -159,44 +169,62 @@ export class MessagesController {
     );
   }
 
+  @Post('forward')
+  async forwardMessage(@Request() req, @Body() data: ForwardMessageDto) {
+    return this.messagesService.forwardMessage(
+      data.messageId,
+      data.targetRoomId,
+      req.user.id,
+    );
+  }
+
   @Post(':roomId/read')
   async markRoomAsSeen(@Param('roomId') roomId: string, @Request() req) {
-    return this.messagesService.markRoomAsSeen(roomId, req.user.id);
+    return this.reactionService.markRoomAsSeen(roomId, req.user.id);
   }
 
   @Put(':messageId')
   async editMessage(
+    @Request() req,
     @Param('messageId') messageId: string,
-    @Body() data: { content: string },
+    @Body() data: UpdateMessageDto,
   ) {
-    return this.messagesService.editMessage(messageId, data.content);
+    return this.messagesService.editMessage(
+      messageId,
+      req.user.id,
+      data.content,
+    );
   }
 
   @Delete(':messageId')
-  async deleteMessage(@Param('messageId') messageId: string) {
-    return this.messagesService.deleteMessage(messageId);
+  async deleteMessage(@Request() req, @Param('messageId') messageId: string) {
+    return this.messagesService.deleteMessage(messageId, req.user.id);
   }
 
   @Post(':messageId/reactions')
   async addReaction(
     @Param('messageId') messageId: string,
     @Request() req,
-    @Body() data: { emoji: string },
+    @Body() data: AddReactionDto,
   ) {
-    return this.messagesService.addReaction(messageId, req.user.id, data.emoji);
+    return this.reactionService.addReaction(messageId, req.user.id, data.emoji);
   }
 
   @Delete('reactions/:reactionId')
-  async removeReaction(@Param('reactionId') reactionId: string) {
-    return this.messagesService.removeReaction(reactionId);
+  async removeReaction(
+    @Request() req,
+    @Param('reactionId') reactionId: string,
+  ) {
+    return this.reactionService.removeReaction(reactionId, req.user.id);
   }
 
   @Post(':messageId/pin')
-  async pinMessage(@Param('messageId') messageId: string) {
-    return this.messagesService.pinMessage(messageId);
+  async pinMessage(@Request() req, @Param('messageId') messageId: string) {
+    return this.messagesService.pinMessage(messageId, req.user.id);
   }
+
   @Delete(':messageId/pin')
-  async unpinMessage(@Param('messageId') messageId: string) {
-    return this.messagesService.unpinMessage(messageId);
+  async unpinMessage(@Request() req, @Param('messageId') messageId: string) {
+    return this.messagesService.unpinMessage(messageId, req.user.id);
   }
 }

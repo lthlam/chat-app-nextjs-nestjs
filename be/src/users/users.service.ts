@@ -27,8 +27,6 @@ export class UsersService implements OnModuleInit {
     private usersRepository: Repository<User>,
     @InjectRepository(BlockedUser)
     private blockedUsersRepository: Repository<BlockedUser>,
-    @InjectRepository(FriendRequest)
-    private friendRequestRepository: Repository<FriendRequest>,
     private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
   ) {}

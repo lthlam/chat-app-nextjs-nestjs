@@ -14,15 +14,15 @@ describe('UsersService.blockUser (Debug)', () => {
   const mockTarget = { id: 'user-2' };
 
   const mockManager = {
-    findOne: jest.fn().mockImplementation((entity, options) => {
-      if (entity === User) {
+    findOne: jest.fn().mockImplementation((_entity, options) => {
+      if (_entity === User) {
         if (options.where.id === 'user-1') return Promise.resolve(mockUser);
         if (options.where.id === 'user-2') return Promise.resolve(mockTarget);
       }
       return Promise.resolve(null);
     }),
     delete: jest.fn().mockResolvedValue({}),
-    create: jest.fn().mockImplementation((entity, data) => data),
+    create: jest.fn().mockImplementation((_entity, data) => data),
     save: jest.fn().mockImplementation((entity) => Promise.resolve(entity)),
   };
 

@@ -11,6 +11,8 @@ import { RoomsService } from './rooms.service';
 import { RoomsController } from './rooms.controller';
 import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
+import { MessagesSearchService } from './services/messages-search.service';
+import { MessagesReactionService } from './services/messages-reaction.service';
 import { SocketStateService } from './socket-state.service';
 import { PresenceGateway } from './presence.gateway';
 import { ChatGateway } from './chat.gateway';
@@ -47,6 +49,8 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
   providers: [
     RoomsService,
     MessagesService,
+    MessagesSearchService,
+    MessagesReactionService,
     SocketStateService,
     PresenceGateway,
     ChatGateway,
@@ -57,6 +61,8 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
   exports: [
     RoomsService,
     MessagesService,
+    MessagesSearchService,
+    MessagesReactionService,
     PresenceGateway,
     ChatGateway,
     RoomEventsGateway,

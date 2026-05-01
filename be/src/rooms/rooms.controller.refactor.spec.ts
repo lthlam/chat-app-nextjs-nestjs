@@ -9,6 +9,7 @@ describe('RoomsController (Post-Refactor Test)', () => {
   const mockRoomsService = {
     createRoom: jest.fn(),
     addMember: jest.fn(),
+    getRoom: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -20,6 +21,8 @@ describe('RoomsController (Post-Refactor Test)', () => {
     controller = module.get<RoomsController>(RoomsController);
     roomsService = module.get<RoomsService>(RoomsService);
   });
+
+  const mockReq = { user: { id: 'user-id' } };
 
   it('should call RoomsService.createRoom when creating a room', async () => {
     const req = { user: { id: 'user-owner' } };
@@ -38,12 +41,25 @@ describe('RoomsController (Post-Refactor Test)', () => {
 
   it('should call RoomsService.addMember when adding a member', async () => {
     const roomId = 'room-1';
-    const userId = 'user-2';
+    const memberId = 'user-2';
 
     mockRoomsService.addMember.mockResolvedValue({ id: roomId });
 
-    await controller.addMember(roomId, { user_id: userId });
+    await controller.addMember(mockReq as any, roomId, { user_id: memberId });
 
-    expect(roomsService.addMember).toHaveBeenCalledWith(roomId, userId);
+    expect(roomsService.addMember).toHaveBeenCalledWith(
+      roomId,
+      memberId,
+      'user-id',
+    );
+  });
+
+  it('should call RoomsService.getRoom when getting a room', async () => {
+    const roomId = 'room-1';
+    mockRoomsService.getRoom.mockResolvedValue({ id: roomId });
+
+    await controller.getRoom(mockReq as any, roomId);
+
+    expect(roomsService.getRoom).toHaveBeenCalledWith(roomId, 'user-id');
   });
 });

@@ -29,8 +29,8 @@ export class RoomsController {
   }
 
   @Get(':id')
-  async getRoom(@Param('id') id: string) {
-    return this.roomsService.getRoom(id);
+  async getRoom(@Request() req, @Param('id') id: string) {
+    return this.roomsService.getRoom(id, req.user.id);
   }
 
   @Get(':id/members')
@@ -48,13 +48,21 @@ export class RoomsController {
   }
 
   @Put(':id')
-  async updateRoom(@Param('id') roomId: string, @Body() data: UpdateRoomDto) {
-    return this.roomsService.updateRoom(roomId, data);
+  async updateRoom(
+    @Request() req,
+    @Param('id') roomId: string,
+    @Body() data: UpdateRoomDto,
+  ) {
+    return this.roomsService.updateRoom(roomId, req.user.id, data);
   }
 
   @Post(':id/members')
-  async addMember(@Param('id') roomId: string, @Body() data: AddMemberDto) {
-    return this.roomsService.addMember(roomId, data.user_id);
+  async addMember(
+    @Request() req,
+    @Param('id') roomId: string,
+    @Body() data: AddMemberDto,
+  ) {
+    return this.roomsService.addMember(roomId, data.user_id, req.user.id);
   }
 
   @Delete(':id/members/:userId')

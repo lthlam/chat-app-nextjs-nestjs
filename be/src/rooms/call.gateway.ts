@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
+import { MessagesSearchService } from './services/messages-search.service';
 import { UsersService } from '../users/users.service';
 import {
   UseGuards,
@@ -16,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 import { SocketStateService } from './socket-state.service';
+import { MessageType } from './enums/message-type.enum';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
@@ -30,6 +32,7 @@ export class CallGateway {
 
   constructor(
     private messagesService: MessagesService,
+    private searchService: MessagesSearchService,
     private usersService: UsersService,
     private socketState: SocketStateService,
   ) {}
@@ -43,7 +46,7 @@ export class CallGateway {
     if (!fromUserId) return;
 
     try {
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       const sender = members.find((m) => m.id === fromUserId);
       const fromUsername = sender?.username || 'Nguoi dung';
 
@@ -71,7 +74,7 @@ export class CallGateway {
     if (!fromUserId) return;
 
     try {
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       members.forEach((member) => {
         if (member.id === fromUserId) return;
         this.emitToUser(member.id, 'audio-call-answer', {
@@ -94,7 +97,7 @@ export class CallGateway {
     if (!fromUserId) return;
 
     try {
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       members.forEach((member) => {
         if (member.id === fromUserId) return;
         this.emitToUser(member.id, 'audio-call-ice-candidate', {
@@ -122,16 +125,16 @@ export class CallGateway {
       const callerId =
         this.socketState.activeCalls.get(data.roomId) || fromUserId;
 
-      const callLogMessage = await this.messagesService.sendMessage(
+      await this.messagesService.sendMessage(
         data.roomId,
         callerId,
         `CALL_LOG:${data.callType || 'audio'}:${duration}`,
         undefined,
-        'call',
+        MessageType.CALL,
       );
       this.socketState.activeCalls.delete(data.roomId);
 
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       members.forEach((member) => {
         if (member.id === fromUserId) return;
         this.emitToUser(member.id, 'audio-call-end', {
@@ -139,8 +142,6 @@ export class CallGateway {
           fromUserId,
         });
       });
-
-      this.server.to(`room-${data.roomId}`).emit('new-message', callLogMessage);
 
       for (const [uid, rid] of this.socketState.usersInCall.entries()) {
         if (rid === data.roomId) this.socketState.usersInCall.delete(uid);
@@ -159,8 +160,8 @@ export class CallGateway {
     if (!fromUserId) return;
 
     try {
-      const isGroup = await this.messagesService.isRoomGroupChat(data.roomId);
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const isGroup = await this.searchService.isRoomGroupChat(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       const sender = members.find((m) => m.id === fromUserId);
       const fromUsername = sender?.username || 'Nguoi dung';
 
@@ -205,7 +206,7 @@ export class CallGateway {
     if (!fromUserId) return;
 
     try {
-      const members = await this.messagesService.getRoomMembers(data.roomId);
+      const members = await this.searchService.getRoomMembers(data.roomId);
       members.forEach((member) =>
         this.socketState.usersInCall.set(member.id, data.roomId),
       );

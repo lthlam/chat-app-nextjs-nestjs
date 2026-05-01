@@ -13,6 +13,7 @@ import { User } from '../users/user.entity';
 import { Room } from './room.entity';
 import { MessageReaction } from './message-reaction.entity';
 import { MessageRead } from './message-read.entity';
+import { MessageType } from './enums/message-type.enum';
 
 @Entity('messages')
 export class Message {
@@ -30,10 +31,10 @@ export class Message {
 
   @Column({
     type: 'enum',
-    enum: ['text', 'image', 'call', 'voice', 'album', 'video', 'location'],
-    default: 'text',
+    enum: MessageType,
+    default: MessageType.TEXT,
   })
-  type: 'text' | 'image' | 'call' | 'voice' | 'album' | 'video' | 'location';
+  type: MessageType;
 
   @Column({ nullable: true })
   delivered_at: Date;

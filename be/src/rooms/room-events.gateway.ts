@@ -10,6 +10,7 @@ import {
 import { RoomsService } from './rooms.service';
 import { SocketStateService } from './socket-state.service';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
+import { ROOM_EVENTS } from './constants/room-events.constants';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
@@ -27,7 +28,7 @@ export class RoomEventsGateway {
     private socketState: SocketStateService,
   ) {}
 
-  @OnEvent('room.created')
+  @OnEvent(ROOM_EVENTS.ROOM_CREATED)
   async handleRoomCreated(payload: {
     room: any;
     ownerId: string;
@@ -47,7 +48,7 @@ export class RoomEventsGateway {
     );
   }
 
-  @OnEvent('room.member.added')
+  @OnEvent(ROOM_EVENTS.MEMBER_ADDED)
   async handleMemberAdded(payload: { roomId: string; userId: string }) {
     const roomSummary = await this.roomsService.getRoomSummaryForUser(
       payload.roomId,
@@ -58,7 +59,7 @@ export class RoomEventsGateway {
     }
   }
 
-  @OnEvent('room.member.removed')
+  @OnEvent(ROOM_EVENTS.MEMBER_REMOVED)
   handleMemberRemoved(payload: {
     roomId: string;
     userId: string;
@@ -118,35 +119,35 @@ export class RoomEventsGateway {
     });
   }
 
-  @OnEvent('room.history.cleared')
+  @OnEvent(ROOM_EVENTS.HISTORY_CLEARED)
   handleHistoryCleared(payload: { roomId: string; userId: string }) {
     this.emitToUser(payload.userId, 'history-cleared', {
       roomId: payload.roomId,
     });
   }
 
-  @OnEvent('message.sent')
+  @OnEvent(ROOM_EVENTS.MESSAGE_SENT)
   handleMessageSent(payload: { roomId: string; message: any }) {
     this.server
       .to(`room-${payload.roomId}`)
       .emit('new-message', payload.message);
   }
 
-  @OnEvent('message.updated')
+  @OnEvent(ROOM_EVENTS.MESSAGE_UPDATED)
   handleMessageUpdated(payload: { roomId: string; message: any }) {
     this.server
       .to(`room-${payload.roomId}`)
       .emit('message-updated', payload.message);
   }
 
-  @OnEvent('message.reaction_updated')
+  @OnEvent(ROOM_EVENTS.MESSAGE_REACTION_UPDATED)
   handleReactionUpdated(payload: { roomId: string; message: any }) {
     this.server
       .to(`room-${payload.roomId}`)
       .emit('reaction-updated', payload.message);
   }
 
-  @OnEvent('message.seen')
+  @OnEvent(ROOM_EVENTS.MESSAGE_SEEN)
   handleMessageSeen(payload: {
     roomId: string;
     user: any;
@@ -155,11 +156,30 @@ export class RoomEventsGateway {
     this.server.to(`room-${payload.roomId}`).emit('messages-seen', payload);
   }
 
-  @OnEvent('message.room_delivered')
+  @OnEvent(ROOM_EVENTS.MESSAGE_ROOM_DELIVERED)
   handleRoomDelivered(payload: { roomId: string; messages: any[] }) {
     payload.messages.forEach((msg) => {
       this.server.to(`room-${payload.roomId}`).emit('message-updated', msg);
     });
+  }
+
+  @OnEvent(ROOM_EVENTS.TYPING_STARTED)
+  handleTypingStarted(payload: {
+    roomId: string;
+    userId: string;
+    username: string;
+  }) {
+    this.server.to(`room-${payload.roomId}`).emit('user-typing', {
+      userId: payload.userId,
+      username: payload.username,
+    });
+  }
+
+  @OnEvent(ROOM_EVENTS.TYPING_STOPPED)
+  handleTypingStopped(payload: { roomId: string; userId: string }) {
+    this.server
+      .to(`room-${payload.roomId}`)
+      .emit('user-stopped-typing', { userId: payload.userId });
   }
 
   private notifyUserAddedToRoom(userId: string, room: any) {

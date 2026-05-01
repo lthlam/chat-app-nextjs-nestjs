@@ -7,6 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagesService } from './messages.service';
+import { MessagesSearchService } from './services/messages-search.service';
+import { MessagesReactionService } from './services/messages-reaction.service';
 import {
   UseGuards,
   UsePipes,
@@ -16,6 +18,7 @@ import {
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 import { JoinRoomDto, SendMessageDto } from './dto/rooms.dto';
 import { SocketStateService } from './socket-state.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
@@ -30,7 +33,10 @@ export class ChatGateway {
 
   constructor(
     private messagesService: MessagesService,
+    private searchService: MessagesSearchService,
+    private reactionService: MessagesReactionService,
     private socketState: SocketStateService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   @SubscribeMessage('join-room')
@@ -41,10 +47,7 @@ export class ChatGateway {
     const userId = this.socketState.getUserId(client.id) || data.userId;
     if (!userId) return;
 
-    const isMember = await this.messagesService.isRoomMember(
-      data.roomId,
-      userId,
-    );
+    const isMember = await this.searchService.isRoomMember(data.roomId, userId);
     if (!isMember) {
       client.emit('room-removed', { roomId: data.roomId, reason: 'kicked' });
       client.leave(`room-${data.roomId}`);
@@ -54,13 +57,7 @@ export class ChatGateway {
     client.join(`room-${data.roomId}`);
 
     try {
-      const updatedMessages = await this.messagesService.markRoomAsDelivered(
-        data.roomId,
-        userId,
-      );
-      updatedMessages.forEach((msg) => {
-        this.server.to(`room-${data.roomId}`).emit('message-updated', msg);
-      });
+      await this.reactionService.markRoomAsDelivered(data.roomId, userId);
     } catch (error) {
       console.error('Auto-delivery sync failed:', error);
     }
@@ -78,7 +75,7 @@ export class ChatGateway {
     }
 
     try {
-      const isMember = await this.messagesService.isRoomMember(
+      const isMember = await this.searchService.isRoomMember(
         data.roomId,
         userId,
       );
@@ -88,7 +85,7 @@ export class ChatGateway {
         return;
       }
 
-      const message = await this.messagesService.sendMessage(
+      await this.messagesService.sendMessage(
         data.roomId,
         userId,
         data.content,
@@ -96,8 +93,6 @@ export class ChatGateway {
         data.type,
         data.mentions,
       );
-
-      this.server.to(`room-${data.roomId}`).emit('new-message', message);
     } catch (error: any) {
       client.emit('error', {
         message: error?.message || 'Failed to send message',
@@ -114,12 +109,11 @@ export class ChatGateway {
     if (!userId) return;
 
     try {
-      const message = await this.messagesService.forwardMessage(
+      await this.messagesService.forwardMessage(
         data.messageId,
         data.targetRoomId,
         userId,
       );
-      this.server.to(`room-${data.targetRoomId}`).emit('new-message', message);
     } catch (error: any) {
       client.emit('error', {
         message: error?.message || 'Failed to forward message',
@@ -128,19 +122,9 @@ export class ChatGateway {
   }
 
   @SubscribeMessage('message-delivered')
-  async handleMessageDelivered(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { messageId: string },
-  ) {
+  async handleMessageDelivered(@MessageBody() data: { messageId: string }) {
     try {
-      const updatedMessage = await this.messagesService.markMessageAsDelivered(
-        data.messageId,
-      );
-      if (updatedMessage) {
-        this.server
-          .to(`room-${updatedMessage.room.id}`)
-          .emit('message-updated', updatedMessage);
-      }
+      await this.reactionService.markMessageAsDelivered(data.messageId);
     } catch (error) {
       console.error('Delivery tracking failed:', error);
     }
@@ -151,18 +135,21 @@ export class ChatGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: string; userId: string; username: string },
   ) {
-    this.server
-      .to(`room-${data.roomId}`)
-      .emit('user-typing', { userId: data.userId, username: data.username });
+    this.eventEmitter.emit('typing.started', {
+      roomId: data.roomId,
+      userId: data.userId,
+      username: data.username,
+    });
 
     if (this.socketState.typingTimeouts.has(client.id)) {
       clearTimeout(this.socketState.typingTimeouts.get(client.id));
     }
 
     const timeout = setTimeout(() => {
-      this.server
-        .to(`room-${data.roomId}`)
-        .emit('user-stopped-typing', { userId: data.userId });
+      this.eventEmitter.emit('typing.stopped', {
+        roomId: data.roomId,
+        userId: data.userId,
+      });
       this.socketState.typingTimeouts.delete(client.id);
     }, 3000);
 
@@ -178,8 +165,9 @@ export class ChatGateway {
       clearTimeout(this.socketState.typingTimeouts.get(client.id));
       this.socketState.typingTimeouts.delete(client.id);
     }
-    this.server
-      .to(`room-${data.roomId}`)
-      .emit('user-stopped-typing', { userId: data.userId });
+    this.eventEmitter.emit('typing.stopped', {
+      roomId: data.roomId,
+      userId: data.userId,
+    });
   }
 }
