@@ -50,13 +50,14 @@ export class RoomEventsGateway {
   }
 
   @OnEvent(ROOM_EVENTS.MEMBER_ADDED)
-  async handleMemberAdded(payload: { roomId: string; userId: string }) {
+  async handleMemberAdded(payload: { roomId: string; member: { id: string } }) {
+    const userId = payload.member.id;
     const roomSummary = await this.roomsService.getRoomSummaryForUser(
       payload.roomId,
-      payload.userId,
+      userId,
     );
     if (roomSummary) {
-      this.notifyUserAddedToRoom(payload.userId, roomSummary);
+      this.notifyUserAddedToRoom(userId, roomSummary);
     }
   }
 
