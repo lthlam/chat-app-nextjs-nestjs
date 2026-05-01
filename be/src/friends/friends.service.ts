@@ -8,6 +8,7 @@ import { FriendRequest, FriendRequestStatus } from './friend-request.entity';
 import { User } from '../users/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersService } from '../users/users.service';
+import { FRIEND_EVENTS } from './constants/friend-events.constants';
 
 @Injectable()
 export class FriendsService {
@@ -59,7 +60,7 @@ export class FriendsService {
       existing.status = FriendRequestStatus.PENDING;
       const saved = await this.friendRequestRepository.save(existing);
 
-      this.eventEmitter.emit('friend.request.received', {
+      this.eventEmitter.emit(FRIEND_EVENTS.REQUEST_RECEIVED, {
         receiverId,
         data: {
           requestId: saved.id,
@@ -87,7 +88,7 @@ export class FriendsService {
 
     const saved = await this.friendRequestRepository.save(request);
 
-    this.eventEmitter.emit('friend.request.received', {
+    this.eventEmitter.emit(FRIEND_EVENTS.REQUEST_RECEIVED, {
       receiverId,
       data: {
         requestId: saved.id,
@@ -141,11 +142,11 @@ export class FriendsService {
       status: request.receiver.status,
     };
 
-    this.eventEmitter.emit('friend.request.accepted', {
+    this.eventEmitter.emit(FRIEND_EVENTS.REQUEST_ACCEPTED, {
       targetId: request.sender.id,
       payload: { requestId: savedRequest.id, friend: receiverSummary },
     });
-    this.eventEmitter.emit('friend.request.accepted', {
+    this.eventEmitter.emit(FRIEND_EVENTS.REQUEST_ACCEPTED, {
       targetId: request.receiver.id,
       payload: { requestId: savedRequest.id, friend: senderSummary },
     });
@@ -157,13 +158,18 @@ export class FriendsService {
     return savedRequest;
   }
 
-  async rejectFriendRequest(requestId: string) {
+  async rejectFriendRequest(requestId: string, currentUserId: string) {
     const request = await this.friendRequestRepository.findOne({
       where: { id: requestId },
+      relations: ['receiver'],
     });
 
     if (!request) {
       throw new BadRequestException('Friend request not found');
+    }
+
+    if (String(request.receiver?.id) !== String(currentUserId)) {
+      throw new BadRequestException('You cannot reject this friend request');
     }
 
     request.status = FriendRequestStatus.REJECTED;
@@ -205,13 +211,16 @@ export class FriendsService {
     if (cached) return cached;
 
     const requests = await this.friendRequestRepository.find({
-      where: { status: FriendRequestStatus.ACCEPTED },
+      where: [
+        { sender: { id: userId }, status: FriendRequestStatus.ACCEPTED },
+        { receiver: { id: userId }, status: FriendRequestStatus.ACCEPTED },
+      ],
       relations: ['sender', 'receiver'],
     });
 
-    const result = requests
-      .filter((r) => r.sender.id === userId || r.receiver.id === userId)
-      .map((r) => (r.sender.id === userId ? r.receiver : r.sender));
+    const result = requests.map((r) =>
+      r.sender.id === userId ? r.receiver : r.sender,
+    );
 
     await this.cacheManager.set(cacheKey, result, 60000);
     return result;
@@ -247,8 +256,8 @@ export class FriendsService {
     await this.cacheManager.del(`friends_list_${userId}`);
     await this.cacheManager.del(`friends_list_${targetUserId}`);
 
-    this.eventEmitter.emit('friend.removed', { userId, targetUserId });
-    this.eventEmitter.emit('friend.removed', {
+    this.eventEmitter.emit(FRIEND_EVENTS.REMOVED, { userId, targetUserId });
+    this.eventEmitter.emit(FRIEND_EVENTS.REMOVED, {
       userId: targetUserId,
       targetUserId: userId,
     });
@@ -274,7 +283,7 @@ export class FriendsService {
     };
   }
 
-  @OnEvent('user.blocked')
+  @OnEvent(FRIEND_EVENTS.USER_BLOCKED)
   async handleUserBlocked(payload: { blockedId: string; blockerId: string }) {
     await this.cacheManager.del(`friends_list_${payload.blockerId}`);
     await this.cacheManager.del(`friends_list_${payload.blockedId}`);

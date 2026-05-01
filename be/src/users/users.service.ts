@@ -2,8 +2,13 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  ConflictException,
   OnModuleInit,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { User } from './user.entity';
@@ -11,6 +16,7 @@ import { BlockedUser } from './blocked-user.entity';
 import { FriendRequest } from '../friends/friend-request.entity';
 import * as bcrypt from 'bcryptjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FRIEND_EVENTS } from '../friends/constants/friend-events.constants';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -29,6 +35,7 @@ export class UsersService implements OnModuleInit {
     private blockedUsersRepository: Repository<BlockedUser>,
     private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async create(
@@ -56,7 +63,15 @@ export class UsersService implements OnModuleInit {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+    const cacheKey = `user_profile_${id}`;
+    const cached = await this.cacheManager.get<User>(cacheKey);
+    if (cached) return cached;
+
+    const user = await this.usersRepository.findOneBy({ id });
+    if (user) {
+      await this.cacheManager.set(cacheKey, user, 300000); // 5 minutes
+    }
+    return user;
   }
 
   async validatePassword(
@@ -81,12 +96,19 @@ export class UsersService implements OnModuleInit {
   }
 
   async updateProfile(userId: string, data: Partial<User>): Promise<User> {
-    if (data.username && !/^[a-z0-9]+$/.test(data.username)) {
-      throw new BadRequestException(
-        'Username must contain only lowercase letters and numbers',
-      );
+    if (data.username) {
+      if (!/^[a-z0-9]+$/.test(data.username)) {
+        throw new BadRequestException(
+          'Username must contain only lowercase letters and numbers',
+        );
+      }
+      const existing = await this.findExact(data.username);
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('Username already taken');
+      }
     }
     await this.usersRepository.update(userId, data);
+    await this.cacheManager.del(`user_profile_${userId}`);
     return this.findById(userId);
   }
 
@@ -108,8 +130,15 @@ export class UsersService implements OnModuleInit {
       throw new BadRequestException('Current password is incorrect');
     }
 
+    if (currentPassword === newPassword) {
+      throw new BadRequestException(
+        'New password cannot be the same as the current password',
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.usersRepository.update(userId, { password: hashedPassword });
+    await this.cacheManager.del(`user_profile_${userId}`);
   }
 
   async updateUserStatus(
@@ -121,6 +150,7 @@ export class UsersService implements OnModuleInit {
       updateData.last_seen = new Date();
     }
     await this.usersRepository.update(userId, updateData);
+    await this.cacheManager.del(`user_profile_${userId}`);
     return this.findById(userId);
   }
 
@@ -146,14 +176,10 @@ export class UsersService implements OnModuleInit {
       }
 
       // Unfriend logic: find and remove any friend requests between them
-      await manager.delete(FriendRequest, {
-        sender: { id: blockerId },
-        receiver: { id: blockedId },
-      });
-      await manager.delete(FriendRequest, {
-        sender: { id: blockedId },
-        receiver: { id: blockerId },
-      });
+      await manager.delete(FriendRequest, [
+        { sender: { id: blockerId }, receiver: { id: blockedId } },
+        { sender: { id: blockedId }, receiver: { id: blockerId } },
+      ]);
 
       const blockedUser = manager.create(BlockedUser, {
         blocker,
@@ -163,7 +189,10 @@ export class UsersService implements OnModuleInit {
       const savedBlockedUser = await manager.save(blockedUser);
 
       // Notify the blocked user after DB success
-      this.eventEmitter.emit('user.blocked', { blockedId, blockerId });
+      this.eventEmitter.emit(FRIEND_EVENTS.USER_BLOCKED, {
+        blockedId,
+        blockerId: blockerId,
+      });
 
       return savedBlockedUser;
     });
@@ -176,7 +205,10 @@ export class UsersService implements OnModuleInit {
     });
 
     // Notify the unblocked user
-    this.eventEmitter.emit('user.unblocked', { blockedId, blockerId });
+    this.eventEmitter.emit(FRIEND_EVENTS.USER_UNBLOCKED, {
+      blockedId,
+      blockerId: blockerId,
+    });
   }
 
   async isUserBlocked(blockerId: string, blockedId: string): Promise<boolean> {

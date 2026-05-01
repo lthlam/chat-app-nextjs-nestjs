@@ -8,6 +8,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 
+import { FRIEND_EVENTS } from '../friends/constants/friend-events.constants';
+
 describe('UsersService', () => {
   let service: UsersService;
 
@@ -31,7 +33,10 @@ describe('UsersService', () => {
   const mockDataSource = {
     transaction: jest.fn().mockImplementation((cb) =>
       cb({
-        findOne: jest.fn().mockResolvedValue({ id: '1' }),
+        findOne: jest.fn().mockImplementation((entity) => {
+          if (entity === User) return Promise.resolve({ id: '1' });
+          return Promise.resolve(null);
+        }),
         delete: jest.fn(),
         create: jest.fn().mockReturnValue({}),
         save: jest.fn().mockResolvedValue({ id: 'block-id' }),
@@ -54,6 +59,14 @@ describe('UsersService', () => {
         },
         { provide: EventEmitter2, useValue: mockEventEmitter },
         { provide: DataSource, useValue: mockDataSource },
+        {
+          provide: 'CACHE_MANAGER',
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -64,7 +77,7 @@ describe('UsersService', () => {
     await service.blockUser('1', '2');
 
     expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'user.blocked',
+      FRIEND_EVENTS.USER_BLOCKED,
       expect.objectContaining({ blockerId: '1', blockedId: '2' }),
     );
   });

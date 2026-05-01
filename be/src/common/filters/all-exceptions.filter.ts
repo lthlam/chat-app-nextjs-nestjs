@@ -14,18 +14,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message: any = {
+      message: (exception as Error).message,
+      error: 'Internal Server Error',
+    };
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : {
-            message: (exception as Error).message,
-            error: 'Internal Server Error',
-          };
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.getResponse();
+    } else if (
+      (exception as any).code === '23505' ||
+      (exception as any)?.driverError?.code === '23505'
+    ) {
+      status = HttpStatus.CONFLICT;
+      message = {
+        message: 'A record with this value already exists',
+        error: 'Conflict',
+      };
+    }
 
     const errorResponse = {
       statusCode: status,

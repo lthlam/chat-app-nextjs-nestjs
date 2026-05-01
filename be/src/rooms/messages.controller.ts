@@ -12,6 +12,9 @@ import {
   Request,
   UploadedFile,
   UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MessagesService } from './messages.service';
@@ -37,14 +40,17 @@ export class MessagesController {
 
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-    if (!file.mimetype.startsWith('image/')) {
-      throw new BadRequestException('File must be an image');
-    }
-
+  async uploadImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+          new FileTypeValidator({ fileType: '.(jpg|jpeg|png|gif|webp)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
     const uploadResult = await this.cloudinaryService.uploadFile(
       file,
       'chat/images',
@@ -86,9 +92,17 @@ export class MessagesController {
 
   @Post('upload-voice')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadVoice(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('File is required');
-
+  async uploadVoice(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({ fileType: '.(webm|ogg|mp3|wav|m4a)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
     const uploadResult = await this.cloudinaryService.uploadFile(
       file,
       'chat/voices',
@@ -99,12 +113,17 @@ export class MessagesController {
 
   @Post('upload-video')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadVideo(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('File is required');
-    if (!file.mimetype.startsWith('video/')) {
-      throw new BadRequestException('File must be a video');
-    }
-
+  async uploadVideo(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50MB
+          new FileTypeValidator({ fileType: '.(mp4|mov|avi|mkv|webm)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
     const uploadResult = await this.cloudinaryService.uploadFile(
       file,
       'chat/videos',

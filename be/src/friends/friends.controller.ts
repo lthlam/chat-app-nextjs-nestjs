@@ -56,8 +56,11 @@ export class FriendsController {
   }
 
   @Put('request/:requestId/reject')
-  async rejectRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.friendsService.rejectFriendRequest(requestId);
+  async rejectRequest(
+    @Request() req,
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+  ) {
+    return this.friendsService.rejectFriendRequest(requestId, req.user.id);
   }
 
   @Get('status/:userId')

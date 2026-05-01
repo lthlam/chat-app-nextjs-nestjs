@@ -39,6 +39,14 @@ describe('UsersService.blockUser (Debug)', () => {
         { provide: getRepositoryToken(FriendRequest), useValue: {} },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: DataSource, useValue: mockDataSource },
+        {
+          provide: 'CACHE_MANAGER',
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

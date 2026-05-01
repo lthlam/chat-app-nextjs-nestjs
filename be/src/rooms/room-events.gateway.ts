@@ -11,6 +11,7 @@ import { RoomsService } from './rooms.service';
 import { SocketStateService } from './socket-state.service';
 import { WsJwtGuard } from '../auth/ws-jwt.guard';
 import { ROOM_EVENTS } from './constants/room-events.constants';
+import { FRIEND_EVENTS } from '../friends/constants/friend-events.constants';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
@@ -74,7 +75,7 @@ export class RoomEventsGateway {
     );
   }
 
-  @OnEvent('friend.removed')
+  @OnEvent(FRIEND_EVENTS.REMOVED)
   handleFriendRemoved(payload: { userId: string; targetUserId: string }) {
     this.emitToUser(payload.targetUserId, 'friend-removed', {
       userId: payload.userId,
@@ -84,7 +85,7 @@ export class RoomEventsGateway {
     });
   }
 
-  @OnEvent('friend.request.accepted')
+  @OnEvent(FRIEND_EVENTS.REQUEST_ACCEPTED)
   handleFriendRequestAccepted(eventPayload: {
     targetId: string;
     payload: any;
@@ -96,7 +97,7 @@ export class RoomEventsGateway {
     );
   }
 
-  @OnEvent('friend.request.received')
+  @OnEvent(FRIEND_EVENTS.REQUEST_RECEIVED)
   handleFriendRequestReceived(eventPayload: { receiverId: string; data: any }) {
     this.emitToUser(
       eventPayload.receiverId,
@@ -105,14 +106,14 @@ export class RoomEventsGateway {
     );
   }
 
-  @OnEvent('user.blocked')
+  @OnEvent(FRIEND_EVENTS.USER_BLOCKED)
   handleUserBlocked(payload: { blockedId: string; blockerId: string }) {
     this.emitToUser(payload.blockedId, 'user-blocked', {
       blockerId: payload.blockerId,
     });
   }
 
-  @OnEvent('user.unblocked')
+  @OnEvent(FRIEND_EVENTS.USER_UNBLOCKED)
   handleUserUnblocked(payload: { blockedId: string; blockerId: string }) {
     this.emitToUser(payload.blockedId, 'user-unblocked', {
       blockerId: payload.blockerId,

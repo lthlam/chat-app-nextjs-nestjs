@@ -23,11 +23,6 @@ export class RoomsController {
     return this.roomsService.getRooms(req.user.id);
   }
 
-  @Get('ice-servers')
-  getIceServers() {
-    return this.roomsService.getIceServers();
-  }
-
   @Get(':id')
   async getRoom(@Request() req, @Param('id') id: string) {
     return this.roomsService.getRoom(id, req.user.id);

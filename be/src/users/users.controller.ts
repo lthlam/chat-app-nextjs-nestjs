@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
@@ -39,17 +40,25 @@ export class UsersController {
 
   @Put(':id')
   async updateProfile(
+    @Request() req,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: UpdateUserDto,
   ) {
+    if (id !== req.user.id) {
+      throw new ForbiddenException('Cannot update another user profile');
+    }
     return this.usersService.updateProfile(id, data);
   }
 
   @Put(':id/password')
   async changePassword(
+    @Request() req,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ChangePasswordDto,
   ) {
+    if (id !== req.user.id) {
+      throw new ForbiddenException('Cannot change another user password');
+    }
     await this.usersService.changePassword(
       id,
       dto.currentPassword,

@@ -249,7 +249,7 @@ export const roomsApi = {
     }),
 
   getIceServers: () =>
-    apiCall<any[]>('/rooms/ice-servers'),
+    apiCall<any[]>('/webrtc/ice-servers'),
 };
 
 export const messagesApi = {
