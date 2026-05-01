@@ -6,8 +6,10 @@ import {
   Matches,
   IsObject,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   @Matches(/^[a-z0-9]+$/, {
@@ -15,10 +17,12 @@ export class RegisterDto {
   })
   username: string;
 
+  @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
+  @ApiProperty()
   @IsString()
   @MinLength(6)
   @IsNotEmpty()
@@ -26,20 +30,24 @@ export class RegisterDto {
 }
 
 export class LoginDto {
+  @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   password: string;
 }
 
 export class AuthResponseDto {
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   access_token: string;
 
+  @ApiProperty()
   @IsObject()
   @IsNotEmpty()
   user: {

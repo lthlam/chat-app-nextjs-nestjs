@@ -12,17 +12,22 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto, UpdateRoomDto, AddMemberDto } from './dto/rooms.dto';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Rooms')
+@ApiBearerAuth()
 @Controller('rooms')
 @UseGuards(AuthGuard('jwt'))
 export class RoomsController {
   constructor(private roomsService: RoomsService) {}
 
+  @ApiOperation({ summary: 'Get all rooms for current user' })
   @Get()
   async getRooms(@Request() req) {
     return this.roomsService.getRooms(req.user.id);
   }
 
+  @ApiOperation({ summary: 'Get room by id' })
   @Get(':id')
   async getRoom(@Request() req, @Param('id') id: string) {
     return this.roomsService.getRoom(id, req.user.id);

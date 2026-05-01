@@ -12,6 +12,10 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FriendsService } from './friends.service';
 
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiTags('Friends')
+@ApiBearerAuth()
 @Controller('friends')
 @UseGuards(AuthGuard('jwt'))
 export class FriendsController {

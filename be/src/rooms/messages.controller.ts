@@ -28,6 +28,10 @@ import {
   AddReactionDto,
   ForwardMessageDto,
 } from './dto/rooms.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiTags('Messages')
+@ApiBearerAuth()
 @Controller('messages')
 @UseGuards(AuthGuard('jwt'))
 export class MessagesController {

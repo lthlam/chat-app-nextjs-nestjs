@@ -18,6 +18,10 @@ import { UpdateUserDto } from './dto/users.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { Query } from '@nestjs/common';
 
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(AuthGuard('jwt'))
 export class UsersController {

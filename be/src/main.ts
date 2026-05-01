@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AppLogger } from './common/logger/app.logger';
 import * as dotenv from 'dotenv';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
 dotenv.config();
@@ -14,6 +15,15 @@ async function bootstrap() {
     bodyParser: false,
     logger: new AppLogger(),
   });
+
+  const config = new DocumentBuilder()
+    .setTitle('Chat App API')
+    .setDescription('The chat application API description')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
 
   // Setup Socket.IO adapter
   app.useWebSocketAdapter(new IoAdapter(app));

@@ -22,7 +22,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 @UseGuards(WsJwtGuard)
-@UsePipes(new ValidationPipe())
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    skipMissingProperties: true,
+  }),
+)
 @WebSocketGateway({
   cors: { origin: '*', credentials: true },
   transports: ['websocket', 'polling'],
