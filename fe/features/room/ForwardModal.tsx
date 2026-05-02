@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useDeferredValue } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
@@ -20,14 +20,9 @@ export function ForwardModal({ isOpen, onClose, messageId }: ForwardModalProps) 
   const user = useAuthStore(s => s.user);
   const showToast = useUiStore((state) => state.showToast);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const deferredSearch = useDeferredValue(searchTerm);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   const getRoomName = (room: any) => {
     if (room.is_group_chat) {
@@ -38,7 +33,7 @@ export function ForwardModal({ isOpen, onClose, messageId }: ForwardModalProps) 
 
   const filteredRooms = rooms.filter(room => {
     const name = getRoomName(room);
-    return name.toLowerCase().includes(debouncedSearch.toLowerCase());
+    return name.toLowerCase().includes(deferredSearch.toLowerCase());
   });
 
   const toggleRoom = (roomId: string) => {

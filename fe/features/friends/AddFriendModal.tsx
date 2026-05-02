@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { usersApi, User } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserProfileModal } from '@/features/profile/UserProfileModal';
+import dynamic from 'next/dynamic';
+const UserProfileModal = dynamic(() => import('@/features/profile/UserProfileModal').then(mod => mod.UserProfileModal), { ssr: false });
 import { Avatar } from '@/components/ui/Avatar';
 
 interface AddFriendModalProps {

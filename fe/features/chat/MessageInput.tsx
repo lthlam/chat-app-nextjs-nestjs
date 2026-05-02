@@ -8,7 +8,7 @@ import { getSocket } from '@/lib/socket';
 import { ImagePlus, Send, X, Mic, MapPin, Loader2 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { AudioRecorder } from '@/components/ui/AudioRecorder';
-import { messagesApi, roomsApi } from '@/lib/api';
+import { messagesApi } from '@/lib/api';
 import { useRoomMembers } from '@/hooks/useRoomMembers';
 
 

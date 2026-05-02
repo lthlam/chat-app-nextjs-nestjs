@@ -12,6 +12,8 @@ import { RoomListProvider } from './RoomListContext';
 import { RoomListHeader, RoomListTabs, RoomListSubTabs } from './RoomListParts';
 import { RoomListChats } from './RoomListChats';
 import { RoomListFriends } from './RoomListFriends';
+import { useDeferredValue } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RoomListProps {
   onRoomSelected?: () => void;
@@ -30,7 +32,7 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
   const { pendingRequestsData, isLoadingPending } = usePendingRequests();
 
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const deferredSearch = useDeferredValue(search.trim().toLowerCase());
   const [showRequests, setShowRequests] = useState(false);
   const [tab, setTab] = useState<'chats' | 'friends'>('chats');
   const [friends, setFriends] = useState<any[]>([]);
@@ -98,14 +100,6 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
     };
   }, [rooms, user?.id]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim().toLowerCase());
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
   const getRoomDisplayName = useCallback((room: any) => {
     if (room?.is_group_chat) {
       return room?.name || 'Group Chat';
@@ -117,7 +111,7 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
 
   const contextValue = {
     search, setSearch,
-    debouncedSearch,
+    deferredSearch,
     tab, setTab,
     chatFilter, setChatFilter,
     showRequests, setShowRequests,
@@ -134,8 +128,33 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
         <RoomListHeader />
         <RoomListTabs />
         <RoomListSubTabs />
-        <RoomListChats />
-        <RoomListFriends />
+        <div className="flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {tab === 'chats' ? (
+              <motion.div
+                key="chats"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 flex flex-col"
+              >
+                <RoomListChats />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="friends"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 flex flex-col"
+              >
+                <RoomListFriends />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </RoomListProvider>
   );

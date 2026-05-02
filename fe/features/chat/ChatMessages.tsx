@@ -4,15 +4,15 @@ import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
-import { messagesApi, Message, roomsApi } from '@/lib/api';
+import { messagesApi, Message } from '@/lib/api';
 import { useUiStore } from '@/store/uiStore';
-import { MessageSearchBar } from '@/features/search/MessageSearchBar';
-import { PinnedMessagesList } from '@/features/room/PinnedMessagesList';
 import { MessageItem } from '@/features/chat/MessageItem';
 import { TypingIndicator } from '@/components/ui/TypingIndicator';
 import dynamic from 'next/dynamic';
 import { ChevronsDown } from 'lucide-react';
 
+const MessageSearchBar = dynamic(() => import('@/features/search/MessageSearchBar').then(mod => mod.MessageSearchBar), { ssr: false });
+const PinnedMessagesList = dynamic(() => import('@/features/room/PinnedMessagesList').then(mod => mod.PinnedMessagesList), { ssr: false });
 const ForwardModal = dynamic(() => import('@/features/room/ForwardModal').then(mod => mod.ForwardModal), { ssr: false });
 import { useChatManager } from '@/hooks/useChatManager';
 import { useMessageSearch } from '@/hooks/useMessageSearch';
@@ -175,7 +175,7 @@ export function ChatMessages() {
 
   const {
     searchQuery, setSearchQuery,
-    debouncedSearchQuery,
+    deferredSearchQuery,
     searchResults, setSearchResults,
     activeSearchResultIndex,
     isPinnedListOpen, setIsPinnedListOpen,
@@ -271,7 +271,7 @@ export function ChatMessages() {
       });
     }
 
-    const keyword = debouncedSearchQuery.trim();
+    const keyword = deferredSearchQuery.trim();
     if (!keyword || !shouldHighlight) {
       // Just render links inside the text nodes
       return <>{resultNodes.map((node, i) => 
@@ -313,7 +313,7 @@ export function ChatMessages() {
 
       return <React.Fragment key={`frag-${nodeIdx}`}>{segments}</React.Fragment>;
     })}</>;
-  }, [debouncedSearchQuery]);
+  }, [deferredSearchQuery]);
 
   // UI Actions
   const openActionMenu = useCallback((id: string) => {
@@ -539,7 +539,7 @@ export function ChatMessages() {
         ? (new Date(nextMsg.created_at).getTime() - new Date(m.created_at).getTime()) / 1000 / 60 
         : Infinity;
       const hideTimestamp = isSameAsNext && timeDiffToNext < 5;
-      const hideAvatar = hideTimestamp;
+
 
       const msgDate = new Date(m.created_at);
       const dateLabel = getDateLabel(msgDate);
@@ -558,30 +558,53 @@ export function ChatMessages() {
               </div>
             </div>
           )}
-          <MessageItem 
-            message={m}
-            currentUser={user}
-            hideTimestamp={hideTimestamp}
-            hideAvatar={hideAvatar}
-            isLatestOwnMessage={m.id === latestOwnMessageId}
-            lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
-            highlightedMessageId={highlightedMessageId}
-            isActiveSearchTarget={m.id === activeSearchId}
-            debouncedSearchQuery={debouncedSearchQuery}
-            onJumpToMessage={handleJumpToMessage}
-            onOpenActionMenu={openActionMenu}
-            onScheduleCloseActionMenu={scheduleCloseActionMenu}
-            onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
-            onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
-            onOpenReactionPicker={openReactionPicker}
-            onReactionSelect={handleReactionSelect}
-            onReply={handleReply}
-            onDelete={handleDelete}
-            onTogglePin={handleTogglePin}
-            onRemoveReaction={handleRemoveReaction}
-            onForward={handleForward}
-            renderHighlightedText={renderHighlightedText}
-          />
+          {hideTimestamp ? (
+            <MessageItem.Grouped 
+              message={m}
+              currentUser={user}
+              isLatestOwnMessage={m.id === latestOwnMessageId}
+              lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
+              highlightedMessageId={highlightedMessageId}
+              isActiveSearchTarget={m.id === activeSearchId}
+              deferredSearchQuery={deferredSearchQuery}
+              onJumpToMessage={handleJumpToMessage}
+              onOpenActionMenu={openActionMenu}
+              onScheduleCloseActionMenu={scheduleCloseActionMenu}
+              onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
+              onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
+              onOpenReactionPicker={openReactionPicker}
+              onReactionSelect={handleReactionSelect}
+              onReply={handleReply}
+              onDelete={handleDelete}
+              onTogglePin={handleTogglePin}
+              onRemoveReaction={handleRemoveReaction}
+              onForward={handleForward}
+              renderHighlightedText={renderHighlightedText}
+            />
+          ) : (
+            <MessageItem 
+              message={m}
+              currentUser={user}
+              isLatestOwnMessage={m.id === latestOwnMessageId}
+              lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
+              highlightedMessageId={highlightedMessageId}
+              isActiveSearchTarget={m.id === activeSearchId}
+              deferredSearchQuery={deferredSearchQuery}
+              onJumpToMessage={handleJumpToMessage}
+              onOpenActionMenu={openActionMenu}
+              onScheduleCloseActionMenu={scheduleCloseActionMenu}
+              onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
+              onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
+              onOpenReactionPicker={openReactionPicker}
+              onReactionSelect={handleReactionSelect}
+              onReply={handleReply}
+              onDelete={handleDelete}
+              onTogglePin={handleTogglePin}
+              onRemoveReaction={handleRemoveReaction}
+              onForward={handleForward}
+              renderHighlightedText={renderHighlightedText}
+            />
+          )}
         </React.Fragment>
       );
     });
@@ -592,7 +615,7 @@ export function ChatMessages() {
     latestOwnMessageId, 
     highlightedMessageId, 
     activeSearchId, 
-    debouncedSearchQuery, 
+    deferredSearchQuery, 
     handleJumpToMessage, 
     openActionMenu, 
     scheduleCloseActionMenu, 

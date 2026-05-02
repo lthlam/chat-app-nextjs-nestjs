@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRoomList } from './RoomListContext';
 import { useChatStore } from '@/store/chatStore';
 import { FriendItem } from '@/features/friends/FriendItem';
@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 
 export function RoomListFriends() {
-  const { tab, debouncedSearch, showRequests, setShowRequests, pendingRequests, setPendingRequests, friends, setFriends, onRoomSelected } = useRoomList();
+  const { deferredSearch, showRequests, setShowRequests, pendingRequests, setPendingRequests, friends, setFriends, onRoomSelected } = useRoomList();
   const rooms = useChatStore(s => s.rooms);
   const setRooms = useChatStore(s => s.setRooms);
   const setCurrentRoomId = useChatStore(s => s.setCurrentRoomId);
@@ -18,11 +18,11 @@ export function RoomListFriends() {
 
   const filteredFriends = useMemo(() => {
     return friends.filter((friend) =>
-      (friend.username || '').toLowerCase().includes(debouncedSearch),
+      (friend.username || '').toLowerCase().includes(deferredSearch),
     );
-  }, [friends, debouncedSearch]);
+  }, [friends, deferredSearch]);
 
-  const handleStartChat = async (friend: any) => {
+  const handleStartChat = useCallback(async (friend: any) => {
     try {
       const existingRoom = rooms.find(
         (room) =>
@@ -51,7 +51,7 @@ export function RoomListFriends() {
     } catch (error) {
       console.error('Failed to start chat:', error);
     }
-  };
+  }, [rooms, markRoomAsRead, setCurrentRoomId, setTab, onRoomSelected, setRooms]);
 
   const handleAcceptRequest = async (requestId: string) => {
     try {
@@ -77,7 +77,6 @@ export function RoomListFriends() {
     }
   };
 
-  if (tab !== 'friends') return null;
 
   return (
     <>
@@ -101,7 +100,7 @@ export function RoomListFriends() {
             </button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredFriends.length === 0 ? (
             <div className="p-4 text-center text-gray-500 text-sm">No friends yet</div>
           ) : (

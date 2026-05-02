@@ -11,15 +11,16 @@ interface AvatarProps {
   showStatus?: boolean;
 }
 
+const sizeMap: Record<string, string> = {
+  'xs': 'w-6 h-6 text-[10px]',
+  'sm': 'w-8 h-8 text-xs',
+  'md': 'w-10 h-10 text-sm',
+  'lg': 'w-12 h-12 text-lg',
+  'xl': 'w-16 h-16 text-xl',
+  '2xl': 'w-20 h-20 text-2xl',
+};
+
 export function Avatar({ src, name, size = 'md', className = '', status, showStatus = false }: AvatarProps) {
-  const sizeMap = {
-    'xs': 'w-6 h-6 text-[10px]',
-    'sm': 'w-8 h-8 text-xs',
-    'md': 'w-10 h-10 text-sm',
-    'lg': 'w-12 h-12 text-lg',
-    'xl': 'w-16 h-16 text-xl',
-    '2xl': 'w-20 h-20 text-2xl',
-  };
 
   const currentSizeClass = typeof size === 'string' ? sizeMap[size] : '';
   const customSizeStyle = typeof size === 'number' ? { width: size, height: size, fontSize: size / 2.5 } : {};

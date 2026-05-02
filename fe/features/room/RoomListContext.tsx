@@ -1,11 +1,9 @@
-'use client';
-
 import { createContext, useContext } from 'react';
 
 interface RoomListContextType {
   search: string;
   setSearch: (val: string) => void;
-  debouncedSearch: string;
+  deferredSearch: string;
   tab: 'chats' | 'friends';
   setTab: (val: 'chats' | 'friends') => void;
   chatFilter: 'all' | 'unread' | 'groups';

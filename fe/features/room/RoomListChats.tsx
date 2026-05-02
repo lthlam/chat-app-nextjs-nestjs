@@ -13,7 +13,7 @@ const IMAGE_UPLOAD_REGEX = /\/uploads\/chat\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i;
 const IMAGE_EXT_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
 
 export function RoomListChats() {
-  const { tab, debouncedSearch, chatFilter, isLoading, onRoomSelected, getRoomDisplayName } = useRoomList();
+  const { tab, deferredSearch, chatFilter, isLoading, onRoomSelected, getRoomDisplayName } = useRoomList();
   const rooms = useChatStore(s => s.rooms);
   const setRooms = useChatStore(s => s.setRooms);
   const currentRoomId = useChatStore(s => s.currentRoomId);
@@ -28,12 +28,12 @@ export function RoomListChats() {
 
   useEffect(() => {
     setVisibleRoomCount(CHAT_PAGE_SIZE);
-  }, [debouncedSearch, tab]);
+  }, [deferredSearch, tab]);
 
   const filteredRooms = useMemo(() => {
     return rooms
       .filter((room) => {
-        const nameMatch = getRoomDisplayName(room).toLowerCase().includes(debouncedSearch);
+        const nameMatch = getRoomDisplayName(room).toLowerCase().includes(deferredSearch);
         if (!nameMatch) return false;
         if (chatFilter === 'unread') return !!(room as any).last_message?.is_unread_for_me;
         if (chatFilter === 'groups') return !!(room as any).is_group_chat;
@@ -54,7 +54,7 @@ export function RoomListChats() {
 
         return bTime - aTime;
       });
-  }, [rooms, debouncedSearch, chatFilter, getRoomDisplayName]);
+  }, [rooms, deferredSearch, chatFilter, getRoomDisplayName]);
 
   const visibleRooms = filteredRooms.slice(0, visibleRoomCount);
 
@@ -110,16 +110,16 @@ export function RoomListChats() {
     }
   }, [requestConfirm, setClearedAt, setRooms, currentRoomId, showToast]);
 
-  const getLastMessagePreview = (
+  const getLastMessagePreview = useCallback((
     room: {
       members?: Array<{ id: string; username?: string }>;
-      last_message?: { content?: string; sender_id?: string; sender_name?: string; type?: string };
+      last_message?: { content?: string; sender_id?: string; sender_name?: string; type?: string; deleted_at?: Date };
     },
   ) => {
     const content = room?.last_message?.content || '';
     const type = room?.last_message?.type || 'text';
     const senderId = room?.last_message?.sender_id;
-    const deletedAt = (room?.last_message as any)?.deleted_at;
+    const deletedAt = room?.last_message?.deleted_at;
     const senderNameFromRoom =
       room?.last_message?.sender_name ||
       room?.members?.find((member) => member.id === senderId)?.username;
@@ -158,12 +158,11 @@ export function RoomListChats() {
     if (senderNameFromRoom) return `${senderNameFromRoom}: ${previewText}`;
 
     return previewText;
-  };
+  }, [user?.id]);
 
-  if (tab !== 'chats') return null;
 
   return (
-    <div className="flex-1 overflow-y-auto" onScroll={handleChatListScroll}>
+    <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={handleChatListScroll}>
       {isLoading ? (
         <div className="p-4 text-center text-gray-500">Loading...</div>
       ) : filteredRooms.length === 0 ? (

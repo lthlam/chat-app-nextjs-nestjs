@@ -17,7 +17,7 @@ interface MessageItemProps {
   highlightedMessageId: string | null;
 
   isActiveSearchTarget: boolean;
-  debouncedSearchQuery: string;
+  deferredSearchQuery: string;
   onJumpToMessage: (id: string) => void;
   onOpenActionMenu: (id: string) => void;
   onScheduleCloseActionMenu: (id: string) => void;
@@ -32,16 +32,12 @@ interface MessageItemProps {
   onRemoveReaction: (messageId: string, reactionId: string) => void;
   renderHighlightedText: (text: string, highlight: boolean, mentions?: any[]) => React.ReactNode;
   lastSeenByUsers?: User[];
-  hideTimestamp?: boolean;
-  hideAvatar?: boolean;
 }
 
-export const MessageItem = memo(({
+const MessageItemBase = memo(function MessageItemBase({
   message,
   currentUser,
   isLatestOwnMessage,
-  hideTimestamp,
-  hideAvatar,
   highlightedMessageId,
 
   isActiveSearchTarget,
@@ -59,7 +55,10 @@ export const MessageItem = memo(({
   onRemoveReaction,
   renderHighlightedText,
   lastSeenByUsers = [],
-}: MessageItemProps) => {
+  variant = 'default',
+}: MessageItemProps & { variant?: 'default' | 'grouped' }) {
+  const hideTimestamp = variant === 'grouped';
+  const hideAvatar = variant === 'grouped';
   const activeActionMenuMessageId = useUiStore(s => s.activeActionMenuMessageId);
   const reactionPickerFor = useUiStore(s => s.reactionPickerFor);
 
@@ -286,6 +285,12 @@ export const MessageItem = memo(({
 
     </motion.div>
   );
+});
+
+export const MessageItem = Object.assign(MessageItemBase, {
+  Grouped: (props: MessageItemProps) => (
+    <MessageItemBase {...props} variant="grouped" />
+  ),
 });
 
 MessageItem.displayName = 'MessageItem';

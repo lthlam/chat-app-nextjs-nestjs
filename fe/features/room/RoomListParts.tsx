@@ -5,6 +5,7 @@ import { useRoomList } from './RoomListContext';
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useChatStore } from '@/store/chatStore';
+import { motion } from 'framer-motion';
 
 const CreateGroupModal = dynamic(() => import('@/features/room/CreateGroupModal').then(mod => mod.CreateGroupModal), { ssr: false });
 const AddFriendModal = dynamic(() => import('@/features/friends/AddFriendModal').then(mod => mod.AddFriendModal), { ssr: false });
@@ -72,29 +73,31 @@ export function RoomListTabs() {
   
   return (
     <div className="flex gap-1 p-1 border-b border-blue-100 bg-blue-100/40 dark:border-slate-700 dark:bg-slate-800/40">
-      <button
-        onClick={() => setTab('chats')}
-        className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
-          tab === 'chats'
-            ? 'bg-blue-600 text-white shadow-sm'
-            : 'text-gray-700 hover:bg-blue-200 hover:text-blue-900 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:text-slate-100'
-        }`}
-      >
-        Trò chuyện
-      </button>
-      <button
-        onClick={() => setTab('friends')}
-        className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
-          tab === 'friends'
-            ? 'bg-blue-600 text-white shadow-sm'
-            : 'text-gray-700 hover:bg-blue-200 hover:text-blue-900 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:text-slate-100'
-        }`}
-      >
-        Bạn bè
-        {pendingRequests.length > 0 && (
-          <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse ring-2 ring-white dark:ring-slate-900" />
-        )}
-      </button>
+      {(['chats', 'friends'] as const).map((t) => (
+        <button
+          key={t}
+          onClick={() => setTab(t)}
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all relative ${
+            tab === t
+              ? 'text-white'
+              : 'text-gray-700 hover:bg-blue-200/50 hover:text-blue-900 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:text-slate-100'
+          }`}
+        >
+          <span className="relative z-10 flex items-center justify-center gap-1.5">
+            {t === 'chats' ? 'Trò chuyện' : 'Bạn bè'}
+            {t === 'friends' && pendingRequests.length > 0 && (
+              <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse ring-2 ring-white dark:ring-slate-900" />
+            )}
+          </span>
+          {tab === t && (
+            <motion.div
+              layoutId="tabActive"
+              className="absolute inset-0 bg-blue-600 rounded-lg shadow-sm"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          )}
+        </button>
+      ))}
     </div>
   );
 }
@@ -107,39 +110,37 @@ export function RoomListSubTabs() {
 
   return (
     <div className="flex items-center gap-4 px-4 py-2 bg-blue-50/30 dark:bg-slate-900/40 border-b border-blue-100/50 dark:border-slate-800">
-      <button
-        onClick={() => setChatFilter('all')}
-        className={`text-xs font-bold transition-colors ${
-          chatFilter === 'all'
-            ? 'text-blue-600 dark:text-blue-400'
-            : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
-        }`}
-      >
-        Tất cả
-      </button>
-      <button
-        onClick={() => setChatFilter('unread')}
-        className={`text-xs font-bold transition-colors flex items-center gap-1.5 ${
-          chatFilter === 'unread'
-            ? 'text-blue-600 dark:text-blue-400'
-            : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
-        }`}
-      >
-        Chưa đọc
-        {rooms.some((r: any) => r.last_message?.is_unread_for_me) && (
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-        )}
-      </button>
-      <button
-        onClick={() => setChatFilter('groups')}
-        className={`text-xs font-bold transition-colors ${
-          chatFilter === 'groups'
-            ? 'text-blue-600 dark:text-blue-400'
-            : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
-        }`}
-      >
-        Nhóm
-      </button>
+      {(['all', 'unread', 'groups'] as const).map((filter) => (
+        <button
+          key={filter}
+          onClick={() => setChatFilter(filter)}
+          className={`text-xs font-bold transition-all relative py-1 ${
+            chatFilter === filter
+              ? 'text-blue-600 dark:text-blue-400'
+              : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            {filter === 'all' && 'Tất cả'}
+            {filter === 'unread' && (
+              <>
+                Chưa đọc
+                {rooms.some((r: any) => r.last_message?.is_unread_for_me) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                )}
+              </>
+            )}
+            {filter === 'groups' && 'Nhóm'}
+          </span>
+          {chatFilter === filter && (
+            <motion.div
+              layoutId="chatFilterActive"
+              className="absolute -bottom-[9px] left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400"
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          )}
+        </button>
+      ))}
     </div>
   );
 }

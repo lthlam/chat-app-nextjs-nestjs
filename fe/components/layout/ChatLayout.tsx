@@ -12,10 +12,9 @@ import { RoomList } from '@/features/room/RoomList';
 import { ChatMessages } from '@/features/chat/ChatMessages';
 import dynamic from 'next/dynamic';
 import { MessageInput } from '@/features/chat/MessageInput';
-import { RoomDetailsSidebar } from '@/features/room/RoomDetailsSidebar';
-
 const GroupSettingsModal = dynamic(() => import('@/features/room/GroupSettingsModal').then(mod => mod.GroupSettingsModal), { ssr: false });
 const UserProfileModal = dynamic(() => import('@/features/profile/UserProfileModal').then(mod => mod.UserProfileModal), { ssr: false });
+const RoomDetailsSidebar = dynamic(() => import('@/features/room/RoomDetailsSidebar').then(mod => mod.RoomDetailsSidebar), { ssr: false });
 import { useUiStore } from '@/store/uiStore';
 import { formatTimeAgo } from '@/utils/timeAgo';
 import { Avatar } from '@/components/ui/Avatar';
