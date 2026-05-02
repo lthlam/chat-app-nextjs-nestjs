@@ -9,12 +9,15 @@ import { getSocket } from '@/lib/socket';
 import dynamic from 'next/dynamic';
 import { Search, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RoomItem } from './RoomItem';
-import { FriendItem } from './FriendItem';
+import { RoomItem } from '@/features/room/RoomItem';
+import { FriendItem } from '@/features/friends/FriendItem';
 import { useRoomListSocket } from '@/hooks/useRoomListSocket';
+import { useRooms } from '@/hooks/useRooms';
+import { useFriends } from '@/hooks/useFriends';
+import { usePendingRequests } from '@/hooks/usePendingRequests';
 
-const CreateGroupModal = dynamic(() => import('./CreateGroupModal').then(mod => mod.CreateGroupModal), { ssr: false });
-const AddFriendModal = dynamic(() => import('./AddFriendModal').then(mod => mod.AddFriendModal), { ssr: false });
+const CreateGroupModal = dynamic(() => import('@/features/room/CreateGroupModal').then(mod => mod.CreateGroupModal), { ssr: false });
+const AddFriendModal = dynamic(() => import('@/features/friends/AddFriendModal').then(mod => mod.AddFriendModal), { ssr: false });
 
 const IMAGE_UPLOAD_REGEX = /\/uploads\/chat\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i;
 const IMAGE_EXT_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
@@ -35,13 +38,16 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
   const user = useAuthStore(s => s.user);
   const requestConfirm = useUiStore((state) => state.requestConfirm);
   const showToast = useUiStore((state) => state.showToast);
+  const { roomsData, isLoadingRooms } = useRooms();
+  const { friendsData, isLoadingFriends } = useFriends();
+  const { pendingRequestsData, isLoadingPending } = usePendingRequests();
+
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [showRequests, setShowRequests] = useState(false);
-  const [friends, setFriends] = useState<any[]>([]);
   const [tab, setTab] = useState<'chats' | 'friends'>('chats');
+  const [friends, setFriends] = useState<any[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false);
   const [visibleRoomCount, setVisibleRoomCount] = useState(CHAT_PAGE_SIZE);
@@ -109,32 +115,25 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
   }, [user?.id]);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [roomsData, requestsData, friendsData] = await Promise.all([
-          roomsApi.getRooms().catch((e) => { console.error('Failed to fetch rooms:', e); return []; }),
-          friendsApi.getPending().catch((e) => { console.error('Failed to fetch requests:', e); return []; }),
-          friendsApi.getFriendList().catch((e) => { console.error('Failed to fetch friends:', e); return []; })
-        ]);
+    if (roomsData.length > 0) {
+      setRooms(roomsData);
+      roomsData.forEach((room: any) => {
+        if (room.cleared_at) {
+          setClearedAt(String(room.id), new Date(room.cleared_at).getTime());
+        }
+      });
+    }
+  }, [roomsData, setRooms, setClearedAt]);
 
-        setRooms(roomsData);
-        roomsData.forEach((room: any) => {
-          if (room.cleared_at) {
-            setClearedAt(String(room.id), new Date(room.cleared_at).getTime());
-          }
-        });
+  useEffect(() => {
+    if (friendsData.length > 0) setFriends(friendsData);
+  }, [friendsData, setFriends]);
 
-        setPendingRequests(requestsData as any);
-        setFriends(friendsData as any);
-      } catch (error) {
-        console.error('Failed to fetch initial data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  useEffect(() => {
+    if (pendingRequestsData.length > 0) setPendingRequests(pendingRequestsData);
+  }, [pendingRequestsData, setPendingRequests]);
 
-    fetchInitialData();
-  }, [setRooms, setClearedAt]);
+  const isLoading = isLoadingRooms || isLoadingFriends || isLoadingPending;
 
   const handleSelectRoom = useCallback((roomId: string) => {
     markRoomAsRead(roomId);

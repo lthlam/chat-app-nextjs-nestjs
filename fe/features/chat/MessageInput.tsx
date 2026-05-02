@@ -7,9 +7,9 @@ import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
 import { ImagePlus, Send, X, Mic, MapPin, Loader2 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
-import { AudioRecorder } from './AudioRecorder';
+import { AudioRecorder } from '@/components/ui/AudioRecorder';
 import { messagesApi, roomsApi } from '@/lib/api';
-
+import { useRoomMembers } from '@/hooks/useRoomMembers';
 
 
 export function MessageInput() {
@@ -33,17 +33,13 @@ export function MessageInput() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const textInputRef = useRef<HTMLInputElement | null>(null);
   
-  const [roomMembers, setRoomMembers] = useState<any[]>([]);
   const currentRoom = rooms.find(r => r.id === currentRoomId);
-
-  useEffect(() => {
-    if (!currentRoomId) return;
-    roomsApi.getMembers(currentRoomId).then(setRoomMembers).catch(console.error);
-  }, [currentRoomId]);
+  const shouldFetchMembers = currentRoomId && !currentRoom?.is_group_chat;
+  const { membersData: roomMembers } = useRoomMembers(shouldFetchMembers ? currentRoomId : null);
 
   const otherPerson = !currentRoom?.is_group_chat ? roomMembers.find(m => m.id !== user?.id) : null;
-  const isBlocked = otherPerson && blockedUsers.includes(otherPerson.id);
-  const isBlockedBy = otherPerson && blockedByUsers.includes(otherPerson.id);
+  const isBlocked = Boolean(otherPerson && blockedUsers.includes(otherPerson.id));
+  const isBlockedBy = Boolean(otherPerson && blockedByUsers.includes(otherPerson.id));
   const isAnyBlocked = isBlocked || isBlockedBy;
 
   useEffect(() => {

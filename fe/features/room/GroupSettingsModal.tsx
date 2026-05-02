@@ -9,11 +9,11 @@ import {
   GroupMembersTab,
   GroupAddTab,
   GroupRemoveTab,
-} from './GroupSettingsTabs';
+} from '@/features/room/GroupSettingsTabs';
 import { useChatStore } from '@/store/chatStore';
 import { useUiStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 import { getSocket } from '@/lib/socket';
 
 interface GroupSettingsModalProps {

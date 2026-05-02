@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { Users, Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { formatLastMessageTime } from '@/utils/timeAgo';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface RoomItemProps {
   room: any;

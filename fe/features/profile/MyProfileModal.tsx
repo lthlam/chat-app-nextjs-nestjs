@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { usersApi } from '@/lib/api';
 import { Pencil, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface MyProfileModalProps {
   isOpen: boolean;

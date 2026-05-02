@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut, Moon, Sun, Search } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { Logo } from './Logo';
+import { Logo } from '@/components/ui/Logo';
 import dynamic from 'next/dynamic';
-const MyProfileModal = dynamic(() => import('./MyProfileModal').then(mod => mod.MyProfileModal), { ssr: false });
-const GlobalSearchModal = dynamic(() => import('./GlobalSearchModal').then(mod => mod.GlobalSearchModal), { ssr: false });
-import { Avatar } from './Avatar';
+const MyProfileModal = dynamic(() => import('@/features/profile/MyProfileModal').then(mod => mod.MyProfileModal), { ssr: false });
+const GlobalSearchModal = dynamic(() => import('@/features/search/GlobalSearchModal').then(mod => mod.GlobalSearchModal), { ssr: false });
+import { Avatar } from '@/components/ui/Avatar';
 
 export function Navbar() {
   const router = useRouter();

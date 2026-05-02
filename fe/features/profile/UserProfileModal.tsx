@@ -6,7 +6,7 @@ import { usersApi, friendsApi } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { useUiStore } from '@/store/uiStore';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface UserProfileModalProps {
   user: {

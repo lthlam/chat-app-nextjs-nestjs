@@ -3,7 +3,7 @@
 import { Save, UserPlus, UserCheck, Trash2 } from 'lucide-react';
 import { User } from '@/lib/api';
 import { useChatStore } from '@/store/chatStore';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 export function GroupSettingsInfoTab({
   newGroupName,

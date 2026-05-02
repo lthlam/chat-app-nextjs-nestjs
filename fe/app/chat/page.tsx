@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { ChatLayout } from '../components/ChatLayout';
+import { ChatLayout } from '@/components/layout/ChatLayout';
 
 export default function ChatPage() {
   const router = useRouter();

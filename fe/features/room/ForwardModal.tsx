@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
 import { X, Forward as ForwardIcon, Search } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface ForwardModalProps {
   isOpen: boolean;

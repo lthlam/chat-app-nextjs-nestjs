@@ -6,9 +6,9 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
 import { useUiStore } from '@/store/uiStore';
-import { MessageMediaPreview } from './MessageMediaPreview';
-import { MessageActionMenu } from './MessageActionMenu';
-import { Avatar } from './Avatar';
+import { MessageMediaPreview } from '@/features/chat/MessageMediaPreview';
+import { MessageActionMenu } from '@/features/chat/MessageActionMenu';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface MessageItemProps {
   message: Message;

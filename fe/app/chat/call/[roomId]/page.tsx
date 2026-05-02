@@ -7,8 +7,8 @@ import { useUiStore } from '@/store/uiStore';
 import { roomsApi } from '@/lib/api';
 
 import { useWebRTC } from '@/hooks/useWebRTC';
-import { CallVideoRenderer } from '@/app/components/CallVideoRenderer';
-import { CallControls } from '@/app/components/CallControls';
+import { CallVideoRenderer } from '@/features/chat/CallVideoRenderer';
+import { CallControls } from '@/features/chat/CallControls';
 
 export default function CallPage() {
   const { roomId } = useParams() as { roomId: string };

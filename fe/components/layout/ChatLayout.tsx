@@ -7,18 +7,18 @@ import { useAuthStore } from '@/store/authStore';
 import { usersApi } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 import { Phone, Settings, Video, Menu, ChevronLeft, Search } from 'lucide-react';
-import { Navbar } from './Navbar';
-import { RoomList } from './RoomList';
-import { ChatMessages } from './ChatMessages';
+import { Navbar } from '@/components/layout/Navbar';
+import { RoomList } from '@/features/room/RoomList';
+import { ChatMessages } from '@/features/chat/ChatMessages';
 import dynamic from 'next/dynamic';
-import { MessageInput } from './MessageInput';
-import { RoomDetailsSidebar } from './RoomDetailsSidebar';
+import { MessageInput } from '@/features/chat/MessageInput';
+import { RoomDetailsSidebar } from '@/features/room/RoomDetailsSidebar';
 
-const GroupSettingsModal = dynamic(() => import('./GroupSettingsModal').then(mod => mod.GroupSettingsModal), { ssr: false });
-const UserProfileModal = dynamic(() => import('./UserProfileModal').then(mod => mod.UserProfileModal), { ssr: false });
+const GroupSettingsModal = dynamic(() => import('@/features/room/GroupSettingsModal').then(mod => mod.GroupSettingsModal), { ssr: false });
+const UserProfileModal = dynamic(() => import('@/features/profile/UserProfileModal').then(mod => mod.UserProfileModal), { ssr: false });
 import { useUiStore } from '@/store/uiStore';
 import { formatTimeAgo } from '@/utils/timeAgo';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 export function ChatLayout() {
   const rooms = useChatStore((s) => s.rooms);

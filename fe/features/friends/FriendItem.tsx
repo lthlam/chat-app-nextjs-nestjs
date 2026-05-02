@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { Send } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface FriendItemProps {
   friend: any;

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { usersApi, User } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserProfileModal } from './UserProfileModal';
-import { Avatar } from './Avatar';
+import { UserProfileModal } from '@/features/profile/UserProfileModal';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface AddFriendModalProps {
   isOpen: boolean;

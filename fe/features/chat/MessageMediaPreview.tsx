@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Message } from '@/lib/api';
 import { Video, Phone, PhoneIncoming, PhoneOutgoing, MapPin, Play } from 'lucide-react';
 
-import { LinkPreview } from './LinkPreview';
+import { LinkPreview } from '@/components/ui/LinkPreview';
 
 interface MessageMediaPreviewProps {
   message: Message;

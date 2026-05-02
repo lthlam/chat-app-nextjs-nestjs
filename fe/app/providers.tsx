@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { AppPopupHost } from './components/AppPopupHost';
-import { GlobalSocketHandler } from './components/GlobalSocketHandler';
+import { AppPopupHost } from '@/components/layout/AppPopupHost';
+import { GlobalSocketHandler } from '@/components/layout/GlobalSocketHandler';
 
 export function ClientProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);

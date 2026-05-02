@@ -6,16 +6,17 @@ import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
 import { messagesApi, Message, roomsApi } from '@/lib/api';
 import { useUiStore } from '@/store/uiStore';
-import { MessageSearchBar } from './MessageSearchBar';
-import { PinnedMessagesList } from './PinnedMessagesList';
-import { MessageItem } from './MessageItem';
-import { TypingIndicator } from './TypingIndicator';
+import { MessageSearchBar } from '@/features/search/MessageSearchBar';
+import { PinnedMessagesList } from '@/features/room/PinnedMessagesList';
+import { MessageItem } from '@/features/chat/MessageItem';
+import { TypingIndicator } from '@/components/ui/TypingIndicator';
 import dynamic from 'next/dynamic';
 import { ChevronsDown } from 'lucide-react';
 
-const ForwardModal = dynamic(() => import('./ForwardModal').then(mod => mod.ForwardModal), { ssr: false });
+const ForwardModal = dynamic(() => import('@/features/room/ForwardModal').then(mod => mod.ForwardModal), { ssr: false });
 import { useChatManager } from '@/hooks/useChatManager';
 import { useMessageSearch } from '@/hooks/useMessageSearch';
+import { useRoomMembers } from '@/hooks/useRoomMembers';
 
 export function ChatMessages() {
   const REACTION_CLOSE_DELAY_MS = 650;
@@ -35,17 +36,13 @@ export function ChatMessages() {
   const user = useAuthStore((s) => s.user);
   const blockedUsers = useAuthStore((s) => s.blockedUsers);
   const blockedByUsers = useAuthStore((s) => s.blockedByUsers);
-  const [roomMembers, setRoomMembers] = useState<any[]>([]);
   const currentRoom = rooms.find((r) => r.id === currentRoomId);
-
-  useEffect(() => {
-    if (!currentRoomId || currentRoom?.is_group_chat) return;
-    roomsApi.getMembers(currentRoomId).then(setRoomMembers).catch(console.error);
-  }, [currentRoomId, currentRoom?.is_group_chat]);
+  const shouldFetchMembers = currentRoomId && !currentRoom?.is_group_chat;
+  const { membersData: roomMembers } = useRoomMembers(shouldFetchMembers ? currentRoomId : null);
 
   const otherPerson = !currentRoom?.is_group_chat ? roomMembers.find((m) => m.id !== user?.id) : null;
-  const isBlocked = otherPerson && blockedUsers.includes(otherPerson.id);
-  const isBlockedBy = otherPerson && blockedByUsers.includes(otherPerson.id);
+  const isBlocked = Boolean(otherPerson && blockedUsers.includes(otherPerson.id));
+  const isBlockedBy = Boolean(otherPerson && blockedByUsers.includes(otherPerson.id));
   const isAnyBlocked = isBlocked || isBlockedBy;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);

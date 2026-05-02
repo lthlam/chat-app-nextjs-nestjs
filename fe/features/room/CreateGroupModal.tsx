@@ -7,7 +7,7 @@ import { useChatStore } from '@/store/chatStore';
 import { useUiStore } from '@/store/uiStore';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar } from './Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface CreateGroupModalProps {
   isOpen: boolean;
