@@ -144,7 +144,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Nhập từ khóa cần tìm..."
+              placeholder="Nhập từ khóa cần tìm…"
               className="w-full pl-5 pr-12 py-2.5 border-2 border-blue-200 rounded-xl bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 dark:bg-slate-800 dark:border-slate-600 dark:text-white dark:placeholder:text-slate-400 shadow-sm"
             />
             {isLoading && (

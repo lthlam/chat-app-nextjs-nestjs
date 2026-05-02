@@ -203,7 +203,7 @@ export default function ProfilePage() {
                   disabled={isLoading}
                   className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl border-2 border-blue-300 hover:bg-blue-600 disabled:opacity-50 font-semibold"
                 >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
+                  {isLoading ? 'Đang lưu…' : 'Lưu thay đổi'}
                 </button>
               </form>
             </>
@@ -255,7 +255,7 @@ export default function ProfilePage() {
                  disabled={isLoading}
                  className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl border-2 border-blue-300 hover:bg-blue-600 disabled:opacity-50 font-semibold"
                >
-                 {isLoading ? 'Changing...' : 'Change Password'}
+                 {isLoading ? 'Changing…' : 'Change Password'}
                </button>
              </form>
            )}

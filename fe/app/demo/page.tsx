@@ -78,7 +78,7 @@ export default function CuteUiDemoPage() {
                     <div className="h-9 w-9 rounded-full bg-blue-200" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{name}</p>
-                      <p className="truncate text-xs text-gray-500">Tin nhan moi nhat...</p>
+                      <p className="truncate text-xs text-gray-500">Tin nhắn mới nhất…</p>
                     </div>
                     {idx === 0 && <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />}
                   </button>

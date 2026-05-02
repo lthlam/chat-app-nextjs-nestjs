@@ -99,32 +99,56 @@ export function AudioRecorder({ roomId, onSuccess, onCancel }: AudioRecorderProp
       {!audioBlob ? (
         <>
           {isRecording && (
-            <button aria-label="Dừng ghi âm" onClick={stopRecording} className="p-2 bg-red-500 text-white rounded-full animate-pulse">
+            <button 
+              aria-label="Dừng ghi âm" 
+              onClick={stopRecording} 
+              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md animate-pulse"
+            >
               <Square className="w-4 h-4" />
             </button>
           )}
           {!isRecording && !audioBlob && (
-            <button aria-label="Bắt đầu ghi âm" onClick={startRecording} className="p-2 bg-purple-600 text-white rounded-full">
+            <button 
+              aria-label="Bắt đầu ghi âm" 
+              onClick={startRecording} 
+              className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+            >
               <Mic className="w-4 h-4" />
             </button>
           )}
-          <span className="text-xs font-mono font-bold text-purple-700 dark:text-purple-300">
-            {isRecording ? `Ghi âm... ${formatTime(duration)}` : 'Đang chuẩn bị...'}
+          <span aria-live="polite" className="text-xs font-mono font-bold text-purple-700 dark:text-purple-300">
+            {isRecording ? `Ghi âm… ${formatTime(duration)}` : 'Đang chuẩn bị…'}
           </span>
-          <button aria-label="Hủy ghi âm" onClick={onCancel} className="ml-auto p-1 text-gray-400 hover:text-gray-600">
+          <button 
+            aria-label="Hủy ghi âm" 
+            onClick={onCancel} 
+            className="ml-auto p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition duration-200"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
         </>
       ) : (
         <>
           <span className="text-xs font-bold text-green-600">Sẵn sàng ({formatTime(duration)})</span>
-          <button aria-label="Xóa bản ghi" onClick={() => setAudioBlob(null)} className="p-1 text-red-500">
+          <button 
+            aria-label="Xóa bản ghi" 
+            onClick={() => setAudioBlob(null)} 
+            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition duration-200"
+          >
             <Trash2 className="w-4 h-4" />
           </button>
-          <button onClick={handleSend} className="ml-auto p-2 bg-blue-600 text-white rounded-lg flex items-center gap-1 text-xs">
-            <Send className="w-3 h-3" /> Gửi
+          <button 
+            onClick={handleSend} 
+            className="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+          >
+            <Send className="w-3.5 h-3.5" /> Gửi
           </button>
-          <button onClick={onCancel} className="p-1 text-gray-400 text-xs">Hủy</button>
+          <button 
+            onClick={onCancel} 
+            className="px-2 py-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg text-xs font-medium transition duration-200"
+          >
+            Hủy
+          </button>
         </>
       )}
     </div>

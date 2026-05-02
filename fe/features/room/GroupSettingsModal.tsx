@@ -413,7 +413,7 @@ export function GroupSettingsModal({
                 transition={{ duration: 0.2 }}
               >
                 {isLoading ? (
-                  <div className="py-4 text-center text-gray-500 dark:text-slate-400">Đang tải...</div>
+                  <div className="py-4 text-center text-gray-500 dark:text-slate-400">Đang tải…</div>
                 ) : tab === 'settings' ? (
                   <GroupSettingsInfoTab
                     newGroupName={newGroupName}

@@ -164,9 +164,9 @@ export function RoomListChats() {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar" onScroll={handleChatListScroll}>
       {isLoading ? (
-        <div className="p-4 text-center text-gray-500">Loading...</div>
+        <div className="p-4 text-center text-gray-500">Đang tải…</div>
       ) : filteredRooms.length === 0 ? (
-        <div className="p-4 text-center text-gray-500 text-sm">No chats found</div>
+        <div className="p-4 text-center text-gray-500 text-sm">Không tìm thấy đoạn chat</div>
       ) : (
         <>
           {visibleRooms.map((room) => (
@@ -181,7 +181,7 @@ export function RoomListChats() {
             />
           ))}
           {visibleRooms.length < filteredRooms.length && (
-            <div className="py-2 text-center text-xs text-gray-400">Cuộn để tải thêm...</div>
+            <div className="py-2 text-center text-xs text-gray-400">Cuộn để tải thêm…</div>
           )}
         </>
       )}

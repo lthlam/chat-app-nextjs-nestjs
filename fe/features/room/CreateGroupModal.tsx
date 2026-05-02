@@ -133,7 +133,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Nhập tên nhóm..."
+                  placeholder="Nhập tên nhóm…"
                   className="w-full rounded-xl border-2 border-primary-light bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-400"
                   disabled={isCreating}
                 />
@@ -150,7 +150,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
                 <div className="max-h-64 overflow-y-auto custom-scrollbar">
 
                   {isLoading ? (
-                    <div className="p-4 text-center text-sm text-gray-500 dark:text-slate-400">Đang tải danh sách bạn bè...</div>
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-slate-400">Đang tải danh sách bạn bè…</div>
                   ) : friends.length === 0 ? (
                     <div className="p-4 text-center text-sm text-gray-500 dark:text-slate-400">Bạn chưa có bạn bè</div>
                   ) : (
@@ -236,7 +236,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
                 {isCreating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Đang tạo...
+                    Đang tạo…
                   </>
                 ) : (
                   <>

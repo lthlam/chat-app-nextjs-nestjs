@@ -94,7 +94,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Nhập chính xác username hoặc email..."
+                    placeholder="Nhập chính xác username hoặc email…"
                     className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50/50 px-5 py-4 pl-12 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-400/10 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-800"
 
                   />
@@ -111,7 +111,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                   {isSearching && !foundUser ? (
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
-                      <p className="text-xs font-medium text-slate-400">Đang tìm người dùng...</p>
+                      <p className="text-xs font-medium text-slate-400">Đang tìm người dùng…</p>
                     </div>
                   ) : foundUser ? (
                     <motion.div 

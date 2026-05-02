@@ -391,7 +391,7 @@ export function MessageInput() {
             {isUploading && (
               <div className="absolute -top-7 left-2 flex items-center gap-1.5 px-2 py-0.5 bg-blue-50/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-t-lg border-x border-t border-blue-100 dark:border-slate-700 text-[10px] text-blue-600 dark:text-blue-400 font-bold animate-in fade-in slide-in-from-bottom-1">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Đang gửi...
+                Đang gửi…
               </div>
             )}
             <AnimatePresence>
@@ -454,7 +454,7 @@ export function MessageInput() {
                     setShowMentions(false);
                   }
                 }}
-                placeholder={isAnyBlocked ? (isBlocked ? "Bạn đã chặn người dùng này" : "Bạn đã bị chặn") : "Nhập tin nhắn..."}
+                placeholder={isAnyBlocked ? (isBlocked ? "Bạn đã chặn người dùng này" : "Bạn đã bị chặn") : "Nhập tin nhắn…"}
                 disabled={!currentRoomId || isAnyBlocked}
                 className="w-full px-5 py-2.5 max-[420px]:px-3 max-[420px]:py-2 rounded-full bg-white/95 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 dark:disabled:bg-slate-700/50 disabled:cursor-not-allowed text-black placeholder:text-gray-500 max-[420px]:text-sm dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
               />

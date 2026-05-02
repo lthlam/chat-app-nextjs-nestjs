@@ -153,7 +153,7 @@ export default function RegisterPage() {
             disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 rounded-xl border-2 border-blue-300 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300 disabled:opacity-50"
           >
-            {isLoading ? 'Creating account...' : 'Sign up'}
+            {isLoading ? 'Creating account…' : 'Sign up'}
           </button>
         </form>
 

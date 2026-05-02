@@ -76,7 +76,7 @@ export default function SearchPage() {
               type="text"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by username or email..."
+              placeholder="Tìm kiếm theo tên người dùng hoặc email…"
               className="w-full pl-10 pr-4 py-3 border-2 border-blue-200 rounded-2xl bg-white text-black placeholder-black focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-400"
             />
           </div>
@@ -91,7 +91,7 @@ export default function SearchPage() {
               </h2>
             </div>
             <div className="divide-y max-h-96 overflow-y-auto">
-              {isLoading && <div className="p-4 text-gray-500">Searching...</div>}
+              {isLoading && <div className="p-4 text-gray-500">Searching…</div>}
               {results.length === 0 && !isLoading && (
                 <div className="p-4 text-gray-500 text-sm">No users found</div>
               )}
@@ -158,7 +158,7 @@ export default function SearchPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-500 border-2 border-blue-300 text-white rounded-2xl hover:bg-blue-600 disabled:opacity-50 font-semibold"
                 >
                   <UserPlus className="w-5 h-5" />
-                  {isRequesting ? 'Sending...' : 'Add Friend'}
+                  {isRequesting ? 'Sending…' : 'Add Friend'}
                 </button>
               )}
             </div>

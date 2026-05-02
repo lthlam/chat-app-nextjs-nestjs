@@ -488,7 +488,7 @@ export function ChatMessages() {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-full text-gray-400 font-medium">
-          Loading conversation...
+          Đang tải đoạn chat…
         </div>
       );
     }
@@ -676,7 +676,7 @@ export function ChatMessages() {
         className="flex-1 flex flex-col overflow-y-auto p-3 space-y-0.5 relative"
       >
         {!isLoading && messages.length > 0 && <div className="flex-1 min-h-0" />}
-        {isLoadingOlder && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2 shrink-0">Loading history...</div>}
+        {isLoadingOlder && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2 shrink-0">Đang tải lịch sử…</div>}
         
         {renderedMessages}
 
@@ -690,7 +690,7 @@ export function ChatMessages() {
           </div>
         )}
 
-        {isLoadingNewer && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2">Loading newer messages...</div>}
+        {isLoadingNewer && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2">Đang tải tin nhắn mới hơn…</div>}
         
         <TypingIndicator typingUsers={typingUsers} />
         <div ref={messagesEndRef} />

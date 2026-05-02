@@ -235,7 +235,7 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
                             disabled={isLoading}
                             className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50 transition transform active:scale-[0.98]"
                           >
-                            {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                            {isLoading ? 'Đang lưu…' : 'Lưu thay đổi'}
                           </button>
                         </div>
                       </form>
@@ -284,7 +284,7 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
                           disabled={isLoading}
                           className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50 transition transform active:scale-[0.98]"
                         >
-                          {isLoading ? 'Đang đổi...' : 'Đổi mật khẩu'}
+                          {isLoading ? 'Đang đổi…' : 'Đổi mật khẩu'}
                         </button>
                       </div>
                     </form>

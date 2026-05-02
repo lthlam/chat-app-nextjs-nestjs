@@ -23,7 +23,7 @@ export function RoomListHeader() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Tìm kiếm…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 max-[480px]:pl-8 pr-2 py-1.5 border-2 border-blue-200 rounded-xl bg-white text-sm max-[480px]:text-xs focus:outline-none focus:ring-blue-300 focus:border-blue-300 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-400"

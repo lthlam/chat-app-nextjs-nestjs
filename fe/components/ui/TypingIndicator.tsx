@@ -15,7 +15,7 @@ export function TypingIndicator({ typingUsers }: TypingIndicatorProps) {
         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
       </div>
       <span className="italic">
-        {typingUsers.map((u) => u.username).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+        {typingUsers.map((u) => u.username).join(', ')} {typingUsers.length === 1 ? 'đang gõ…' : 'đang gõ…'}
       </span>
     </div>
   );

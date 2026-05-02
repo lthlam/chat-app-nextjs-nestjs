@@ -25,7 +25,7 @@ export function MessageSearchBar({
       <div className="relative flex-1">
         <input
           type="text"
-          placeholder="Search messages..."
+          placeholder="Tìm kiếm tin nhắn…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-3 py-2 pr-10 rounded-xl bg-white/95 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-black placeholder:text-gray-500 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"

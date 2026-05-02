@@ -43,7 +43,7 @@ export function CallVideoRenderer({
               <div className="text-center">
                  <h1 className="text-xl sm:text-2xl font-bold mb-1 truncate max-w-[250px] sm:max-w-none text-white">{displayName}</h1>
                  <p className="text-sm sm:text-base text-slate-400">
-                   {isCallActive ? `Đang thoại (${formatTime(callDuration)})` : 'Đang kết nối...'}
+                   {isCallActive ? `Đang thoại (${formatTime(callDuration)})` : 'Đang kết nối…'}
                  </p>
               </div>
             </div>
