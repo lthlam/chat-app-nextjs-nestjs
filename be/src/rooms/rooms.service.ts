@@ -189,7 +189,7 @@ export class RoomsService {
       .leftJoinAndSelect('room.messages', 'messages')
       .getOne();
 
-    if (!room) throw new NotFoundException('Room not found');
+    if (!room) throw new NotFoundException('Không tìm thấy phòng');
     const isMember = room.members.some((m) => m.id === userId);
     if (!isMember) throw new ForbiddenException('Not a member of this room');
 
@@ -242,7 +242,7 @@ export class RoomsService {
       relations: ['owner', 'members'],
     });
 
-    if (!room) throw new NotFoundException('Room not found');
+    if (!room) throw new NotFoundException('Không tìm thấy phòng');
 
     if (room.owner.id !== userId) {
       throw new ForbiddenException('Only the owner can update the room');
@@ -268,18 +268,22 @@ export class RoomsService {
         relations: ['owner', 'members'],
       });
 
-      if (!room) throw new NotFoundException('Room not found');
-      if (room.owner.id !== userId) {
-        throw new ForbiddenException('Only the owner can add members');
-      }
-
+      if (!room) throw new NotFoundException('Không tìm thấy phòng');
       const user = await manager
         .getRepository(User)
         .findOneBy({ id: memberId });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
-      if (room.members.some((m) => m.id === memberId)) {
+      const isAlreadyMember = room.members.some((m) => m.id === memberId);
+      const hasNoMember = room.members.length === 0;
+
+      if (isAlreadyMember) {
         return { savedRoom: room, user: null };
+      }
+
+      // If room is empty and current user is owner, make them the owner
+      if (hasNoMember && room.owner?.id === userId) {
+        room.owner = user;
       }
 
       room.members.push(user);
@@ -305,7 +309,7 @@ export class RoomsService {
       });
 
       if (!room) {
-        throw new NotFoundException('Room not found');
+        throw new NotFoundException('Không tìm thấy phòng');
       }
 
       const ownerId = String(room.owner?.id || '');
@@ -352,7 +356,7 @@ export class RoomsService {
       });
 
       if (!room) {
-        throw new NotFoundException('Room not found');
+        throw new NotFoundException('Không tìm thấy phòng');
       }
 
       if (String(room.owner?.id) !== String(actorId)) {
@@ -390,7 +394,7 @@ export class RoomsService {
     });
 
     if (!room) {
-      throw new NotFoundException('Room not found');
+      throw new NotFoundException('Không tìm thấy phòng');
     }
 
     return room.members;
@@ -398,9 +402,9 @@ export class RoomsService {
 
   async clearRoomHistory(roomId: string, userId: string) {
     const room = await this.roomsRepository.findOneBy({ id: roomId });
-    if (!room) throw new NotFoundException('Room not found');
+    if (!room) throw new NotFoundException('Không tìm thấy phòng');
     const user = await this.usersRepository.findOneBy({ id: userId });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
     let history = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },

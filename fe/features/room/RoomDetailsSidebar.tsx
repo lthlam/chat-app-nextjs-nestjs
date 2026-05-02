@@ -211,9 +211,10 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
                   }
                   return [{ ...item, id: `media-item-${item.id}` }];
                 }).map((item) => (
-                  <div
+                  <button
                     key={item.id}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-gray-100 dark:border-slate-800 cursor-pointer group bg-black flex items-center justify-center"
+                    type="button"
+                    className="relative aspect-square rounded-lg overflow-hidden border border-gray-100 dark:border-slate-800 group bg-black flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-400"
                     onClick={() => window.open(item.content, '_blank')}
                   >
                     {item.type === 'voice' ? (
@@ -234,7 +235,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
                         </div>
                       </div>
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             )

@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { Message } from '../message.entity';
@@ -24,6 +27,7 @@ export class MessagesReactionService {
     private roomsRepository: Repository<Room>,
     private eventEmitter: EventEmitter2,
     private dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async addReaction(messageId: string, userId: string, emoji: string) {
@@ -40,13 +44,14 @@ export class MessagesReactionService {
         ],
       });
 
-      if (!message) throw new NotFoundException('Message not found');
+      if (!message) throw new NotFoundException('Không tìm thấy tin nhắn');
 
       const isMember = message.room.members.some((m) => m.id === userId);
-      if (!isMember) throw new ForbiddenException('Not a member of this room');
+      if (!isMember)
+        throw new ForbiddenException('Không phải là thành viên của phòng');
 
       const user = await manager.getRepository(User).findOneBy({ id: userId });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
       const existingReaction = message.reactions.find(
         (r) => r.user.id === userId && r.emoji === emoji,
@@ -99,9 +104,11 @@ export class MessagesReactionService {
       relations: ['message', 'message.room', 'user'],
     });
 
-    if (!reaction) throw new NotFoundException('Reaction not found');
+    if (!reaction) throw new NotFoundException('Không tìm thấy reaction');
     if (reaction.user.id !== userId) {
-      throw new ForbiddenException('You can only remove your own reactions');
+      throw new ForbiddenException(
+        'Bạn chỉ có thể xóa reaction của chính mình',
+      );
     }
 
     await this.reactionsRepository.delete(reactionId);
@@ -167,9 +174,10 @@ export class MessagesReactionService {
       where: { id: roomId },
       relations: ['members'],
     });
-    if (!room) throw new NotFoundException('Room not found');
+    if (!room) throw new NotFoundException('Không tìm thấy phòng');
     const isMember = room.members.some((m) => m.id === userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const result = await this.dataSource.transaction(async (manager) => {
       const undeliveredMessages = await manager
@@ -223,9 +231,10 @@ export class MessagesReactionService {
       where: { id: roomId },
       relations: ['members'],
     });
-    if (!room) throw new NotFoundException('Room not found');
+    if (!room) throw new NotFoundException('Không tìm thấy phòng');
     const isMember = room.members.some((m) => m.id === userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const result = await this.dataSource.transaction(async (manager) => {
       const unreadMessages = await manager
@@ -255,7 +264,7 @@ export class MessagesReactionService {
       }
 
       const user = await manager.getRepository(User).findOneBy({ id: userId });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
       const readsToSave = unreadMessages.map((message) =>
         manager.getRepository(MessageRead).create({ message, user }),
@@ -293,6 +302,7 @@ export class MessagesReactionService {
 
     if (result.updatedMessages.length > 0) {
       this.eventEmitter.emit(ROOM_EVENTS.MESSAGE_SEEN, result);
+      await this.cacheManager.del(`user_rooms_${userId}`);
     }
 
     return result;

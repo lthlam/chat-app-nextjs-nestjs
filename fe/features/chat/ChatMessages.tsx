@@ -558,53 +558,29 @@ export function ChatMessages() {
               </div>
             </div>
           )}
-          {hideTimestamp ? (
-            <MessageItem.Grouped 
-              message={m}
-              currentUser={user}
-              isLatestOwnMessage={m.id === latestOwnMessageId}
-              lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
-              highlightedMessageId={highlightedMessageId}
-              isActiveSearchTarget={m.id === activeSearchId}
-              deferredSearchQuery={deferredSearchQuery}
-              onJumpToMessage={handleJumpToMessage}
-              onOpenActionMenu={openActionMenu}
-              onScheduleCloseActionMenu={scheduleCloseActionMenu}
-              onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
-              onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
-              onOpenReactionPicker={openReactionPicker}
-              onReactionSelect={handleReactionSelect}
-              onReply={handleReply}
-              onDelete={handleDelete}
-              onTogglePin={handleTogglePin}
-              onRemoveReaction={handleRemoveReaction}
-              onForward={handleForward}
-              renderHighlightedText={renderHighlightedText}
-            />
-          ) : (
-            <MessageItem 
-              message={m}
-              currentUser={user}
-              isLatestOwnMessage={m.id === latestOwnMessageId}
-              lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
-              highlightedMessageId={highlightedMessageId}
-              isActiveSearchTarget={m.id === activeSearchId}
-              deferredSearchQuery={deferredSearchQuery}
-              onJumpToMessage={handleJumpToMessage}
-              onOpenActionMenu={openActionMenu}
-              onScheduleCloseActionMenu={scheduleCloseActionMenu}
-              onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
-              onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
-              onOpenReactionPicker={openReactionPicker}
-              onReactionSelect={handleReactionSelect}
-              onReply={handleReply}
-              onDelete={handleDelete}
-              onTogglePin={handleTogglePin}
-              onRemoveReaction={handleRemoveReaction}
-              onForward={handleForward}
-              renderHighlightedText={renderHighlightedText}
-            />
-          )}
+          <MessageItem 
+            message={m}
+            currentUser={user}
+            isLatestOwnMessage={m.id === latestOwnMessageId}
+            lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
+            highlightedMessageId={highlightedMessageId}
+            isActiveSearchTarget={m.id === activeSearchId}
+            deferredSearchQuery={deferredSearchQuery}
+            variant={hideTimestamp ? 'grouped' : 'default'}
+            onJumpToMessage={handleJumpToMessage}
+            onOpenActionMenu={openActionMenu}
+            onScheduleCloseActionMenu={scheduleCloseActionMenu}
+            onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
+            onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
+            onOpenReactionPicker={openReactionPicker}
+            onReactionSelect={handleReactionSelect}
+            onReply={handleReply}
+            onDelete={handleDelete}
+            onTogglePin={handleTogglePin}
+            onRemoveReaction={handleRemoveReaction}
+            onForward={handleForward}
+            renderHighlightedText={renderHighlightedText}
+          />
         </React.Fragment>
       );
     });

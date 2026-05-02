@@ -70,7 +70,8 @@ export class MessagesSearchService {
     afterId?: string,
   ) {
     const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const clearedHistory = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },
@@ -157,7 +158,8 @@ export class MessagesSearchService {
     direction: 'around' | 'forward' | 'backward' = 'around',
   ) {
     const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const clearedHistory = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },
@@ -170,7 +172,7 @@ export class MessagesSearchService {
       .getOne();
 
     if (!targetMessage) {
-      throw new NotFoundException('Target message not found');
+      throw new NotFoundException('Không tìm thấy tin nhắn');
     }
 
     if (
@@ -274,7 +276,8 @@ export class MessagesSearchService {
 
   async getPinnedMessages(roomId: string, userId: string) {
     const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const clearedHistory = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },
@@ -320,7 +323,8 @@ export class MessagesSearchService {
 
   async searchMessages(roomId: string, userId: string, query: string) {
     const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const clearedHistory = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },
@@ -423,7 +427,8 @@ export class MessagesSearchService {
 
   async getMedia(roomId: string, userId: string) {
     const isMember = await this.isRoomMember(roomId, userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     const clearedHistory = await this.roomClearedHistoryRepository.findOne({
       where: { room: { id: roomId }, user: { id: userId } },

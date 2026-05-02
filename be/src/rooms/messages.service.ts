@@ -58,16 +58,16 @@ export class MessagesService implements OnModuleInit {
     const sender = await this.usersRepository.findOneBy({ id: senderId });
 
     if (!room) {
-      throw new NotFoundException('Room not found');
+      throw new NotFoundException('Không tìm thấy phòng');
     }
 
     if (!sender) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Không tìm thấy người dùng');
     }
 
     const isMember = room.members.some((member) => member.id === senderId);
     if (!isMember) {
-      throw new ForbiddenException('You are no longer a member of this room');
+      throw new ForbiddenException('Không phải là thành viên của phòng');
     }
 
     if (!room.is_group_chat) {
@@ -156,7 +156,7 @@ export class MessagesService implements OnModuleInit {
     });
 
     if (!originalMessage) {
-      throw new NotFoundException('Original message not found');
+      throw new NotFoundException('Không tìm thấy tin nhắn gốc');
     }
 
     const room = await this.roomsRepository.findOne({
@@ -165,17 +165,17 @@ export class MessagesService implements OnModuleInit {
     });
 
     if (!room) {
-      throw new NotFoundException('Target room not found');
+      throw new NotFoundException('Không tìm thấy phòng');
     }
 
     const sender = await this.usersRepository.findOneBy({ id: senderId });
     if (!sender) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Không tìm thấy người dùng');
     }
 
     const isMember = room.members.some((member) => member.id === senderId);
     if (!isMember) {
-      throw new ForbiddenException('You are not a member of the target room');
+      throw new ForbiddenException('Không phải là thành viên của phòng');
     }
 
     if (!room.is_group_chat) {
@@ -234,9 +234,11 @@ export class MessagesService implements OnModuleInit {
       relations: ['sender'],
     });
 
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) throw new NotFoundException('Không tìm thấy tin nhắn');
     if (message.sender.id !== userId) {
-      throw new ForbiddenException('You can only edit your own messages');
+      throw new ForbiddenException(
+        'Bạn chỉ có thể chỉnh sửa tin nhắn của chính mình',
+      );
     }
 
     await this.messagesRepository.update(messageId, { content });
@@ -273,9 +275,11 @@ export class MessagesService implements OnModuleInit {
       relations: ['sender'],
     });
 
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) throw new NotFoundException('Không tìm thấy tin nhắn');
     if (message.sender.id !== userId) {
-      throw new ForbiddenException('You can only delete your own messages');
+      throw new ForbiddenException(
+        'Bạn chỉ có thể xoá tin nhắn của chính mình',
+      );
     }
 
     await this.messagesRepository.update(messageId, {
@@ -317,9 +321,10 @@ export class MessagesService implements OnModuleInit {
       relations: ['room', 'room.members'],
     });
 
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) throw new NotFoundException('Không tìm thấy tin nhắn');
     const isMember = message.room.members.some((m) => m.id === userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     await this.messagesRepository.update(messageId, { is_pinned: true });
     const updated = await this.messagesRepository.findOne({
@@ -353,9 +358,10 @@ export class MessagesService implements OnModuleInit {
       relations: ['room', 'room.members'],
     });
 
-    if (!message) throw new NotFoundException('Message not found');
+    if (!message) throw new NotFoundException('Không tìm thấy tin nhắn');
     const isMember = message.room.members.some((m) => m.id === userId);
-    if (!isMember) throw new ForbiddenException('Not a member of this room');
+    if (!isMember)
+      throw new ForbiddenException('Không phải là thành viên của phòng');
 
     await this.messagesRepository.update(messageId, { is_pinned: false });
     const updated = await this.messagesRepository.findOne({

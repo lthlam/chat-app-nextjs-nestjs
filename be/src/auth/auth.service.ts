@@ -20,12 +20,12 @@ export class AuthService {
     // Check if user exists
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Email đã tồn tại');
     }
 
     const existingUsername = await this.usersService.findExact(username);
     if (existingUsername) {
-      throw new ConflictException('Username already exists');
+      throw new ConflictException('Username đã tồn tại');
     }
 
     // Create user
@@ -56,7 +56,7 @@ export class AuthService {
     // Find user
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Sai email hoặc mật khẩu');
     }
 
     // Validate password
@@ -65,7 +65,7 @@ export class AuthService {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Sai email hoặc mật khẩu');
     }
 
     // Generate token

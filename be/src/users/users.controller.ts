@@ -49,7 +49,9 @@ export class UsersController {
     @Body() data: UpdateUserDto,
   ) {
     if (id !== req.user.id) {
-      throw new ForbiddenException('Cannot update another user profile');
+      throw new ForbiddenException(
+        'Không thể cập nhật thông tin của người khác',
+      );
     }
     return this.usersService.updateProfile(id, data);
   }
@@ -61,14 +63,16 @@ export class UsersController {
     @Body() dto: ChangePasswordDto,
   ) {
     if (id !== req.user.id) {
-      throw new ForbiddenException('Cannot change another user password');
+      throw new ForbiddenException(
+        'Không thể thay đổi mật khẩu của người khác',
+      );
     }
     await this.usersService.changePassword(
       id,
       dto.currentPassword,
       dto.newPassword,
     );
-    return { message: 'Password changed successfully' };
+    return { message: 'Đổi mật khẩu thành công' };
   }
 
   @Post(':id/block')

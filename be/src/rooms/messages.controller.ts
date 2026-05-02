@@ -67,13 +67,13 @@ export class MessagesController {
 
   @Get('link-preview')
   async getLinkPreview(@Query('url') url: string) {
-    if (!url) throw new BadRequestException('URL is required');
+    if (!url) throw new BadRequestException('URL không được để trống');
     return this.messagesService.getLinkPreview(url);
   }
 
   @Get('global-search')
   async globalSearch(@Request() req, @Query('q') query: string) {
-    if (!query) throw new BadRequestException('Query is required');
+    if (!query) throw new BadRequestException('Query không được để trống');
     return this.searchService.globalSearch(req.user.id, query);
   }
 

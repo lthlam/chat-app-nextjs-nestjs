@@ -114,12 +114,17 @@ export function MessageMediaPreview({
             </div>
           </button>
         )}
-        <img width={400} height={400}
-          src={message.content}
-          alt="Chat image"
-          className="max-w-[240px] max-h-[300px] max-[480px]:max-w-[50vw] rounded-xl object-cover shadow-md hover:opacity-95 transition-opacity cursor-pointer"
+        <button
+          type="button"
           onClick={() => window.open(message.content, '_blank')}
-        />
+          className="block w-full max-w-[240px] max-h-[300px] max-[480px]:max-w-[50vw] rounded-xl overflow-hidden shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <img width={400} height={400}
+            src={message.content}
+            alt="Chat image"
+            className="w-full h-full object-cover hover:opacity-95 transition-opacity"
+          />
+        </button>
       </>
     );
   }
@@ -189,13 +194,18 @@ export function MessageMediaPreview({
           try {
             const urls = JSON.parse(message.content);
             return urls.map((url: string, idx: number) => (
-              <img width={400} height={400}
+              <button
                 key={idx}
-                src={url}
-                alt={`Album ${idx}`}
-                className="w-full h-28 object-cover hover:opacity-90 cursor-pointer transition-opacity"
+                type="button"
                 onClick={() => window.open(url, '_blank')}
-              />
+                className="w-full h-28 block focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <img width={400} height={400}
+                  src={url}
+                  alt={`Album ${idx}`}
+                  className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                />
+              </button>
             ));
           } catch {
             return <p className="p-2 text-xs opacity-50">Invalid Album</p>;
@@ -247,22 +257,20 @@ export function MessageMediaPreview({
       <div className="flex flex-col gap-2 min-w-[200px] py-1">
         <div className="flex items-center gap-2 font-semibold text-xs">
           <MapPin className="w-4 h-4 text-rose-500" />
-          <span className="opacity-90">Vị trí của tôi</span>
+          <span className="opacity-90">Vị trí</span>
         </div>
 
-        <div className="rounded-xl overflow-hidden border border-blue-100 dark:border-slate-700 h-32 w-full relative group/map">
-          <iframe 
-            width="100%" 
-            height="100%" 
-            style={{ border: 0 }}
-            src={`https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="pointer-events-none"
-          />
-          <button type="button" aria-label="Mở Google Maps" className="absolute inset-0 w-full h-full bg-transparent cursor-pointer" onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')} />
-        </div>
+        <button 
+          type="button" 
+          aria-label="Mở Google Maps" 
+          onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')}
+          className="rounded-xl overflow-hidden border border-blue-100 dark:border-slate-700 h-32 w-full relative group/map bg-blue-50 dark:bg-slate-800/50 flex flex-col items-center justify-center gap-2 hover:bg-blue-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center group-hover/map:scale-110 transition-transform">
+            <MapPin className="w-6 h-6 text-rose-500" />
+          </div>
+          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">Xem trên bản đồ</span>
+        </button>
       </div>
     );
   }
@@ -309,10 +317,12 @@ export function MessageMediaPreview({
           </div>
         </button>
       )}
-      <div className="leading-relaxed break-all">
-        {renderHighlightedText(message.content || '', isActiveSearchTarget, message.mentions)}
+      <div className={`flex flex-col gap-1 ${firstUrl ? 'max-w-[240px] max-[480px]:max-w-[50vw]' : ''}`}>
+        <div className="leading-relaxed break-words text-sm">
+          {renderHighlightedText(message.content || '', isActiveSearchTarget, message.mentions)}
+        </div>
+        {firstUrl && <LinkPreview url={firstUrl.startsWith('http') ? firstUrl : `https://${firstUrl}`} />}
       </div>
-      {firstUrl && <LinkPreview url={firstUrl.startsWith('http') ? firstUrl : `https://${firstUrl}`} />}
     </>
   );
 }

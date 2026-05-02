@@ -98,13 +98,11 @@ export class UsersService implements OnModuleInit {
   async updateProfile(userId: string, data: Partial<User>): Promise<User> {
     if (data.username) {
       if (!/^[a-z0-9]+$/.test(data.username)) {
-        throw new BadRequestException(
-          'Username must contain only lowercase letters and numbers',
-        );
+        throw new BadRequestException('Username phải chứa ký tự thường và số');
       }
       const existing = await this.findExact(data.username);
       if (existing && existing.id !== userId) {
-        throw new ConflictException('Username already taken');
+        throw new ConflictException('Username đã tồn tại');
       }
     }
     await this.usersRepository.update(userId, data);
@@ -119,7 +117,7 @@ export class UsersService implements OnModuleInit {
   ): Promise<void> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Không tìm thấy người dùng');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -127,12 +125,12 @@ export class UsersService implements OnModuleInit {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new BadRequestException('Current password is incorrect');
+      throw new BadRequestException('Sai mật khẩu hiện tại');
     }
 
     if (currentPassword === newPassword) {
       throw new BadRequestException(
-        'New password cannot be the same as the current password',
+        'Mật khẩu mới không được trùng với mật khẩu hiện tại',
       );
     }
 
@@ -156,7 +154,7 @@ export class UsersService implements OnModuleInit {
 
   async blockUser(blockerId: string, blockedId: string): Promise<BlockedUser> {
     if (blockerId === blockedId) {
-      throw new BadRequestException('Cannot block yourself');
+      throw new BadRequestException('Không thể tự block bản thân');
     }
 
     const result = await this.dataSource.transaction(async (manager) => {
@@ -164,7 +162,7 @@ export class UsersService implements OnModuleInit {
       const blocked = await manager.findOne(User, { where: { id: blockedId } });
 
       if (!blocker || !blocked) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException('Không tìm thấy người dùng');
       }
 
       // Check if already blocked
@@ -172,11 +170,11 @@ export class UsersService implements OnModuleInit {
         where: { blocker: { id: blockerId }, blocked: { id: blockedId } },
       });
       if (existing) {
-        return existing;
+        return { savedBlockedUser: existing, wasFriends: false };
       }
 
       // Unfriend logic: find and remove any friend requests between them
-      await manager.delete(FriendRequest, [
+      const deleteResult = await manager.delete(FriendRequest, [
         { sender: { id: blockerId }, receiver: { id: blockedId } },
         { sender: { id: blockedId }, receiver: { id: blockerId } },
       ]);
@@ -188,7 +186,10 @@ export class UsersService implements OnModuleInit {
 
       const savedBlockedUser = await manager.save(blockedUser);
 
-      return savedBlockedUser;
+      return {
+        savedBlockedUser,
+        wasFriends: deleteResult.affected && deleteResult.affected > 0,
+      };
     });
 
     // Notify the blocked user after DB success
@@ -197,7 +198,14 @@ export class UsersService implements OnModuleInit {
       blockerId: blockerId,
     });
 
-    return result;
+    if (result.wasFriends) {
+      this.eventEmitter.emit(FRIEND_EVENTS.REMOVED, {
+        userId: blockerId,
+        targetUserId: blockedId,
+      });
+    }
+
+    return result.savedBlockedUser;
   }
 
   async unblockUser(blockerId: string, blockedId: string): Promise<void> {

@@ -48,8 +48,9 @@ export function GroupMembersTab({ members, ownerId, user, friendIds, pendingFrie
     <>
       {members.map((member: User) => (
         <div key={member.id} className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
-          <div 
-            className={`flex items-center gap-3 flex-1 min-w-0 ${String(member.id) !== String(user?.id) ? 'cursor-pointer hover:opacity-80 transition group/member' : ''}`}
+          <button 
+            type="button"
+            className={`flex items-center text-left gap-3 flex-1 min-w-0 ${String(member.id) !== String(user?.id) ? 'hover:opacity-80 transition group/member focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-lg' : 'cursor-default'}`}
             onClick={() => String(member.id) !== String(user?.id) && setSelectedUserProfileUser(member)}
           >
             <Avatar 
@@ -64,7 +65,7 @@ export function GroupMembersTab({ members, ownerId, user, friendIds, pendingFrie
               </p>
               <p className="text-xs text-gray-500 dark:text-slate-400">{member.status || 'offline'}</p>
             </div>
-          </div>
+          </button>
           {String(member.id) !== String(user?.id) && !friendIds.has(String(member.id)) && !pendingFriendIds.has(String(member.id)) && (
             <button aria-label="Kết bạn" onClick={() => handleSendFriendRequest(member.id, member.username)} className="p-1.5 hover:bg-blue-100 rounded transition text-blue-600 group/tooltip relative">
               <UserPlus className="w-4 h-4" />

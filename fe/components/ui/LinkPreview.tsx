@@ -51,12 +51,12 @@ export function LinkPreview({ url }: LinkPreviewProps) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 block rounded-xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-sm group no-underline"
+      className="mt-2 block max-w-[240px] max-[480px]:max-w-[50vw] rounded-xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors shadow-sm group no-underline"
       onClick={(e) => e.stopPropagation()}
     >
       {preview.image && (
-        <div className="aspect-video w-full overflow-hidden border-b border-gray-100 dark:border-slate-700 bg-gray-100 dark:bg-slate-900">
-          <img width={400} height={400}
+        <div className="w-full max-h-44 overflow-hidden border-b border-gray-100 dark:border-slate-700 bg-gray-100 dark:bg-slate-900">
+          <img
             src={preview.image}
             alt={preview.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

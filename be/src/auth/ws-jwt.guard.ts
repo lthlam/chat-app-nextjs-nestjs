@@ -13,7 +13,7 @@ export class WsJwtGuard implements CanActivate {
       const token = client.handshake.auth.token;
 
       if (!token) {
-        throw new WsException('Not authenticated');
+        throw new WsException('Chưa đăng nhập');
       }
 
       const payload = this.jwtService.verify(token);
@@ -24,7 +24,7 @@ export class WsJwtGuard implements CanActivate {
 
       return true;
     } catch (err) {
-      throw new WsException('Not authenticated');
+      throw new WsException('Token không hợp lệ hoặc hết hạn');
     }
   }
 }

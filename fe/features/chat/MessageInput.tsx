@@ -466,7 +466,7 @@ export function MessageInput() {
               className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition disabled:opacity-30 group/tooltip relative"
             >
               <Send className="w-6 h-6 max-[420px]:w-5 max-[420px]:h-5" />
-              <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+              <span className="pointer-events-none absolute bottom-full mb-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                 Gửi tin nhắn
               </span>
             </button>

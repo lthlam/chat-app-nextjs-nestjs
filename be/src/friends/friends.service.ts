@@ -24,7 +24,7 @@ export class FriendsService {
 
   async sendFriendRequest(senderId: string, receiverId: string) {
     if (senderId === receiverId) {
-      throw new BadRequestException('Cannot add yourself');
+      throw new BadRequestException('Không thể tự kết bạn');
     }
 
     const isBlocked = await this.usersService.isAnyBlocked(
@@ -32,7 +32,7 @@ export class FriendsService {
       receiverId,
     );
     if (isBlocked) {
-      throw new BadRequestException('User is blocked');
+      throw new BadRequestException('Bạn đã bị chặn');
     }
 
     const existing = await this.friendRequestRepository.findOne({
@@ -45,11 +45,11 @@ export class FriendsService {
 
     if (existing) {
       if (existing.status === FriendRequestStatus.ACCEPTED) {
-        throw new BadRequestException('Already friends');
+        throw new BadRequestException('Đã là bạn bè');
       }
 
       if (existing.status === FriendRequestStatus.PENDING) {
-        throw new BadRequestException('Friend request already exists');
+        throw new BadRequestException('Yêu cầu kết bạn không tồn tại');
       }
 
       const sender = await this.usersRepository.findOneBy({ id: senderId });
@@ -113,15 +113,15 @@ export class FriendsService {
     });
 
     if (!request) {
-      throw new BadRequestException('Friend request not found');
+      throw new BadRequestException('Yêu cầu kết bạn không tồn tại');
     }
 
     if (String(request.receiver?.id) !== String(currentUserId)) {
-      throw new BadRequestException('You cannot accept this friend request');
+      throw new BadRequestException('Không thể chấp nhận yêu cầu kết bạn này');
     }
 
     if (request.status !== FriendRequestStatus.PENDING) {
-      throw new BadRequestException('Friend request is no longer pending');
+      throw new BadRequestException('Yêu cầu kết bạn không tồn tại');
     }
 
     request.status = FriendRequestStatus.ACCEPTED;
@@ -165,11 +165,11 @@ export class FriendsService {
     });
 
     if (!request) {
-      throw new BadRequestException('Friend request not found');
+      throw new BadRequestException('Yêu cầu kết bạn không tồn tại');
     }
 
     if (String(request.receiver?.id) !== String(currentUserId)) {
-      throw new BadRequestException('You cannot reject this friend request');
+      throw new BadRequestException('Không thể từ chối yêu cầu kết bạn này');
     }
 
     request.status = FriendRequestStatus.REJECTED;
@@ -228,7 +228,7 @@ export class FriendsService {
 
   async removeFriend(userId: string, targetUserId: string) {
     if (userId === targetUserId) {
-      throw new BadRequestException('Cannot remove yourself');
+      throw new BadRequestException('Không thể tự xóa bản thân');
     }
 
     const request = await this.friendRequestRepository.findOne({
@@ -247,7 +247,7 @@ export class FriendsService {
     });
 
     if (!request) {
-      throw new BadRequestException('Friend relationship not found');
+      throw new BadRequestException('Không tồn tại bạn bè');
     }
 
     await this.friendRequestRepository.remove(request);
@@ -262,7 +262,7 @@ export class FriendsService {
       targetUserId: userId,
     });
 
-    return { message: 'Friend removed successfully' };
+    return { message: 'Xóa bạn thành công' };
   }
 
   async getFriendshipStatus(userId: string, targetUserId: string) {

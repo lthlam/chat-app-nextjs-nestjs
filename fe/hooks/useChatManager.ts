@@ -11,7 +11,7 @@ export function useChatManager(currentRoomId: string | null) {
   const setRooms = useChatStore(s => s.setRooms);
   const markRoomAsRead = useChatStore(s => s.markRoomAsRead);
   const setPinnedMessages = useChatStore(s => s.setPinnedMessages);
-  const clearedAtByRoom = useChatStore(s => s.clearedAtByRoom);
+
   const user = useAuthStore(s => s.user);
   
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +72,8 @@ export function useChatManager(currentRoomId: string | null) {
       const payload = await messagesApi.markRoomAsSeen(currentRoomId);
       markRoomAsRead(currentRoomId);
       if ((payload.updatedMessages || []).length > 0) {
-        const clearedAtMs = clearedAtByRoom.get(String(currentRoomId)) ?? 0;
+        const currentClearedAt = useChatStore.getState().clearedAtByRoom;
+        const clearedAtMs = currentClearedAt.get(String(currentRoomId)) ?? 0;
         const updatedMessages = payload.updatedMessages.map((m) => {
           if (clearedAtMs > 0) {
             const msgTs = new Date(m.created_at).getTime();
@@ -98,7 +99,7 @@ export function useChatManager(currentRoomId: string | null) {
     } finally {
       isMarkingSeenRef.current = false;
     }
-  }, [currentRoomId, markRoomAsRead, setMessages, user?.id, clearedAtByRoom]);
+  }, [currentRoomId, markRoomAsRead, setMessages, user?.id]);
 
   const scheduleSyncSeenState = useCallback(() => {
     if (markSeenTimerRef.current) clearTimeout(markSeenTimerRef.current);
@@ -228,7 +229,8 @@ export function useChatManager(currentRoomId: string | null) {
     };
 
     const scrubMessage = (m: Message, rid: string) => {
-      const clearedAtMs = clearedAtByRoom.get(String(rid)) ?? 0;
+      const currentClearedAt = useChatStore.getState().clearedAtByRoom;
+      const clearedAtMs = currentClearedAt.get(String(rid)) ?? 0;
       if (clearedAtMs <= 0) return m;
 
       const msgTs = new Date(m.created_at).getTime();
@@ -333,7 +335,7 @@ export function useChatManager(currentRoomId: string | null) {
       socket.off('message-deleted', handleMessageDeleted);
       socket.off('messages-seen', handleMessagesSeen);
     };
-  }, [currentRoomId, addMessage, setMessages, setRooms, user?.id, markRoomAsRead, scheduleSyncSeenState, setHasNewerMessages, setNewerCursor, setPinnedMessages, clearedAtByRoom]);
+  }, [currentRoomId, addMessage, setMessages, setRooms, user?.id, markRoomAsRead, scheduleSyncSeenState, setHasNewerMessages, setNewerCursor, setPinnedMessages]);
 
   // Typing logic
   useEffect(() => {

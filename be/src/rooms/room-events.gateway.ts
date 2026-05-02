@@ -79,7 +79,7 @@ export class RoomEventsGateway {
   @OnEvent(FRIEND_EVENTS.REMOVED)
   handleFriendRemoved(payload: { userId: string; targetUserId: string }) {
     this.emitToUser(payload.targetUserId, 'friend-removed', {
-      userId: payload.userId,
+      friendId: payload.userId,
     });
     this.emitToUser(payload.userId, 'friend-removed', {
       friendId: payload.targetUserId,

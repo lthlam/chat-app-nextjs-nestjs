@@ -183,7 +183,7 @@ export function ChatLayout() {
                         className="rounded-xl p-2 text-blue-600 transition hover:bg-blue-100 dark:text-slate-200 dark:hover:bg-slate-700 group/tooltip relative"
                       >
                         <Settings className="h-5 w-5" />
-                        <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+                        <span className="pointer-events-none absolute top-full mt-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                           Cài đặt nhóm
                         </span>
                       </button>
@@ -201,7 +201,7 @@ export function ChatLayout() {
                           }`}
                         >
                           <Video className="w-5 h-5 md:w-6 md:h-6" />
-                          <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+                          <span className="pointer-events-none absolute top-full mt-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                             {isTargetBlocked ? "Bạn đã chặn người dùng này" : "Video Call"}
                           </span>
                         </button>
@@ -215,7 +215,7 @@ export function ChatLayout() {
                           }`}
                         >
                           <Phone className="w-5 h-5 md:w-5 md:h-5" />
-                          <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+                          <span className="pointer-events-none absolute top-full mt-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                             {isTargetBlocked ? "Bạn đã chặn người dùng này" : "Audio Call"}
                           </span>
                         </button>
@@ -227,7 +227,7 @@ export function ChatLayout() {
                       className={`p-2 rounded-full transition group/tooltip relative ${isSearchOpen ? 'text-blue-600 bg-blue-50 dark:bg-slate-800' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                     >
                       <Search className="h-5 w-5 md:h-6 md:w-6" />
-                      <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+                      <span className="pointer-events-none absolute top-full mt-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                         Tìm kiếm tin nhắn
                       </span>
                     </button>
@@ -237,7 +237,7 @@ export function ChatLayout() {
                       className={`p-2 rounded-full transition group/tooltip relative ${isSidebarOpen ? 'text-indigo-600 bg-indigo-50 dark:bg-slate-800' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                     >
                       <Menu className="h-5 w-5 md:h-6 md:w-6" />
-                      <span className="pointer-events-none absolute top-full mt-2 left-[calc(50%-12px)] -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
+                      <span className="pointer-events-none absolute top-full mt-2 right-0 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                         Thông tin cuộc trò chuyện
                       </span>
                     </button>
