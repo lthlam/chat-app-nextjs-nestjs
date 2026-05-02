@@ -260,7 +260,7 @@ export function ChatMessages() {
           resultNodes.push(
             <span 
               key={`mention-${i}`} 
-              className="font-bold text-blue-700 dark:text-blue-300 bg-blue-200/40 dark:bg-blue-800/40 px-1.5 py-0.5 rounded-md border border-blue-300/30 dark:border-blue-600/30 transition-all hover:bg-blue-300/40 dark:hover:bg-blue-700/50 cursor-default"
+              className="font-bold text-blue-700 dark:text-blue-300 bg-blue-200/40 dark:bg-blue-800/40 px-1.5 py-0.5 rounded-md border border-blue-300/30 dark:border-blue-600/30 transition hover:bg-blue-300/40 dark:hover:bg-blue-700/50 cursor-default"
             >
               {part}
             </span>

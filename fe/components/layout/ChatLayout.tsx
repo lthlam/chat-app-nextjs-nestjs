@@ -127,7 +127,7 @@ export function ChatLayout() {
       <Navbar />
       <div className="flex flex-1 overflow-hidden relative">
         {/* Column 1: Room List */}
-        <div className={`${isMobileRoomListOpen ? 'flex' : 'hidden'} md:flex h-full w-full md:w-auto shrink-0 transition-all`}>
+        <div className={`${isMobileRoomListOpen ? 'flex' : 'hidden'} md:flex h-full w-full md:w-auto shrink-0 transition`}>
           <RoomList onRoomSelected={() => setIsMobileRoomListOpen(false)} />
         </div>
 
@@ -154,7 +154,7 @@ export function ChatLayout() {
                        setIsMobileRoomListOpen(true);
                        setCurrentRoomId(null);
                      }}
-                     className="md:hidden p-1 text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-full transition-all"
+                     className="md:hidden p-1 text-blue-600 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-full transition"
                    >
                      <ChevronLeft className="w-6 h-6" />
                    </button>
@@ -194,7 +194,7 @@ export function ChatLayout() {
                         <button
                           onClick={() => openCallWindow(currentRoomId, 'offerer', 'video')}
                           disabled={isTargetBlocked}
-                          className={`p-2 rounded-full transition-all group/tooltip relative ${
+                          className={`p-2 rounded-full transition group/tooltip relative ${
                             isTargetBlocked 
                               ? 'text-gray-400 cursor-not-allowed opacity-50' 
                               : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
@@ -208,7 +208,7 @@ export function ChatLayout() {
                         <button
                           onClick={() => openCallWindow(currentRoomId, 'offerer', 'audio')}
                           disabled={isTargetBlocked}
-                          className={`p-2 rounded-full transition-all group/tooltip relative ${
+                          className={`p-2 rounded-full transition group/tooltip relative ${
                             isTargetBlocked 
                               ? 'text-gray-400 cursor-not-allowed opacity-50' 
                               : 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'

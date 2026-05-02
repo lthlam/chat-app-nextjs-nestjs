@@ -97,12 +97,12 @@ export function MessageMediaPreview({
                       </div>
                     </div>
                   ) : replyIsImage ? (
-                    <img src={replyToMessage.content} alt="Reply" className="h-full w-full object-cover" />
+                    <img width={400} height={400} src={replyToMessage.content} alt="Reply" className="h-full w-full object-cover" />
                   ) : (
                     (() => {
                       try {
                         const urls = JSON.parse(replyToMessage.content);
-                        return <img src={urls[0]} alt="Reply" className="h-full w-full object-cover" />;
+                        return <img width={400} height={400} src={urls[0]} alt="Reply" className="h-full w-full object-cover" />;
                       } catch {
                         return null;
                       }
@@ -114,7 +114,7 @@ export function MessageMediaPreview({
             </div>
           </button>
         )}
-        <img
+        <img width={400} height={400}
           src={message.content}
           alt="Chat image"
           className="max-w-[240px] max-h-[300px] max-[480px]:max-w-[50vw] rounded-xl object-cover shadow-md hover:opacity-95 transition-opacity cursor-pointer"
@@ -142,7 +142,7 @@ export function MessageMediaPreview({
         <div className="flex-1">
           <div className="h-1.5 w-full bg-black/10 dark:bg-white/10 rounded-full relative overflow-hidden">
             <div 
-              className={`absolute inset-y-0 left-0 transition-all duration-100 ${isCurrentUser ? 'bg-white' : 'bg-purple-500'}`} 
+              className={`absolute inset-y-0 left-0 transition duration-100 ${isCurrentUser ? 'bg-white' : 'bg-purple-500'}`} 
               style={{ width: `${progress}%` }} 
             />
           </div>
@@ -189,7 +189,7 @@ export function MessageMediaPreview({
           try {
             const urls = JSON.parse(message.content);
             return urls.map((url: string, idx: number) => (
-              <img
+              <img width={400} height={400}
                 key={idx}
                 src={url}
                 alt={`Album ${idx}`}
@@ -261,7 +261,7 @@ export function MessageMediaPreview({
             referrerPolicy="no-referrer-when-downgrade"
             className="pointer-events-none"
           />
-          <div className="absolute inset-0 bg-transparent cursor-pointer" onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')} />
+          <button type="button" aria-label="Mở Google Maps" className="absolute inset-0 w-full h-full bg-transparent cursor-pointer" onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank')} />
         </div>
       </div>
     );
@@ -292,12 +292,12 @@ export function MessageMediaPreview({
                     </div>
                   </div>
                 ) : replyIsImage ? (
-                  <img src={replyToMessage.content} alt="Reply" className="h-full w-full object-cover" />
+                  <img width={400} height={400} src={replyToMessage.content} alt="Reply" className="h-full w-full object-cover" />
                 ) : (
                   (() => {
                     try {
                       const urls = JSON.parse(replyToMessage.content);
-                      return <img src={urls[0]} alt="Reply" className="h-full w-full object-cover" />;
+                      return <img width={400} height={400} src={urls[0]} alt="Reply" className="h-full w-full object-cover" />;
                     } catch {
                       return null;
                     }

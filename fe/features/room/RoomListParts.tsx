@@ -36,7 +36,7 @@ export function RoomListHeader() {
             className="group relative h-9 w-9 max-[480px]:h-8 max-[480px]:w-8 max-[420px]:h-7 max-[420px]:w-7 max-[380px]:h-[26px] max-[380px]:w-[26px] flex items-center justify-center rounded-xl border-blue-300 bg-transparent hover:bg-blue-100 transition dark:border-slate-500 dark:hover:bg-slate-700"
             title="Add friend"
           >
-            <img src="/friend_add.svg" alt="Add friend" className="w-6 h-6 max-[420px]:w-4 max-[420px]:h-4 dark:invert" />
+            <img width={400} height={400} src="/friend_add.svg" alt="Add friend" className="w-6 h-6 max-[420px]:w-4 max-[420px]:h-4 dark:invert" />
             <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover:opacity-100 z-50 dark:bg-slate-700">
               Thêm bạn
             </span>
@@ -47,7 +47,7 @@ export function RoomListHeader() {
             className="group relative h-9 w-9 max-[480px]:h-8 max-[480px]:w-8 max-[420px]:h-7 max-[420px]:w-7 max-[380px]:h-[26px] max-[380px]:w-[26px] flex items-center justify-center rounded-xl border-blue-300 bg-transparent hover:bg-blue-100 transition dark:border-slate-500 dark:hover:bg-slate-700"
             title="Create group"
           >
-            <img src="/group-add.svg" alt="Create group" className="w-6 h-6 max-[420px]:w-4 max-[420px]:h-4 dark:invert" />
+            <img width={400} height={400} src="/group-add.svg" alt="Create group" className="w-6 h-6 max-[420px]:w-4 max-[420px]:h-4 dark:invert" />
             <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover:opacity-100 z-50 dark:bg-slate-700">
               Tạo nhóm
             </span>
@@ -77,7 +77,7 @@ export function RoomListTabs() {
         <button
           key={t}
           onClick={() => setTab(t)}
-          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all relative ${
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition relative ${
             tab === t
               ? 'text-white'
               : 'text-gray-700 hover:bg-blue-200/50 hover:text-blue-900 dark:text-slate-300 dark:hover:bg-slate-700/80 dark:hover:text-slate-100'
@@ -114,7 +114,7 @@ export function RoomListSubTabs() {
         <button
           key={filter}
           onClick={() => setChatFilter(filter)}
-          className={`text-xs font-bold transition-all relative py-1 ${
+          className={`text-xs font-bold transition relative py-1 ${
             chatFilter === filter
               ? 'text-blue-600 dark:text-blue-400'
               : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'

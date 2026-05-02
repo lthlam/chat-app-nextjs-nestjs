@@ -115,7 +115,7 @@ export default function SearchPage() {
             <div className="lg:col-span-2 bg-white/90 rounded-3xl border-4 border-white shadow-[0_18px_45px_-20px_rgba(67,24,122,0.45)] p-6 dark:bg-slate-900 dark:border-slate-700">
               <div className="text-center mb-8">
                 {selectedUser.avatar_url ? (
-                  <img
+                  <img width={400} height={400}
                     src={selectedUser.avatar_url}
                     alt={selectedUser.username}
                     className="w-24 h-24 rounded-full mx-auto object-cover mb-4"

@@ -107,7 +107,7 @@ export function ForwardModal({ isOpen, onClose, messageId }: ForwardModalProps) 
             </div>
           </div>
 
-          <div className="overflow-y-auto flex-1 p-2">
+          <div className="overflow-y-auto overscroll-contain flex-1 p-2">
             {filteredRooms.length === 0 ? (
               <p className="text-center text-gray-500 py-8">Không tìm thấy cuộc trò chuyện nào</p>
             ) : (

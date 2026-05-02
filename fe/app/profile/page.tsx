@@ -147,7 +147,7 @@ export default function ProfilePage() {
               <div className="mb-8 flex justify-center">
                 <div className="relative">
                   {avatarUrl ? (
-                    <img
+                    <img width={400} height={400}
                       src={avatarUrl}
                       alt={username}
                       className="w-24 h-24 rounded-full object-cover"

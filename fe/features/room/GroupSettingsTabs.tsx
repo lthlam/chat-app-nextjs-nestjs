@@ -66,7 +66,7 @@ export function GroupMembersTab({ members, ownerId, user, friendIds, pendingFrie
             </div>
           </div>
           {String(member.id) !== String(user?.id) && !friendIds.has(String(member.id)) && !pendingFriendIds.has(String(member.id)) && (
-            <button onClick={() => handleSendFriendRequest(member.id, member.username)} className="p-1.5 hover:bg-blue-100 rounded transition text-blue-600 group/tooltip relative">
+            <button aria-label="Kết bạn" onClick={() => handleSendFriendRequest(member.id, member.username)} className="p-1.5 hover:bg-blue-100 rounded transition text-blue-600 group/tooltip relative">
               <UserPlus className="w-4 h-4" />
               <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                 Kết bạn
@@ -104,7 +104,7 @@ export function GroupAddTab({ friends, handleAddMember }: any) {
               <p className="text-xs text-gray-500 dark:text-slate-400">{friend.status || 'offline'}</p>
             </div>
           </div>
-          <button onClick={() => handleAddMember(friend.id)} className="p-1.5 hover:bg-green-100 rounded transition text-green-600 group/tooltip relative">
+          <button aria-label="Thêm thành viên" onClick={() => handleAddMember(friend.id)} className="p-1.5 hover:bg-green-100 rounded transition text-green-600 group/tooltip relative">
             <UserPlus className="w-4 h-4" />
             <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
               Thêm thành viên
@@ -139,7 +139,7 @@ export function GroupRemoveTab({ isOwner, members, ownerId, user, handleRemoveMe
             </div>
           </div>
           {String(member.id) !== String(user?.id) && (
-            <button onClick={() => handleRemoveMember(member.id)} className="p-1.5 hover:bg-red-100 rounded transition text-red-600 group/tooltip relative">
+            <button aria-label="Xóa thành viên" onClick={() => handleRemoveMember(member.id)} className="p-1.5 hover:bg-red-100 rounded transition text-red-600 group/tooltip relative">
               <Trash2 className="w-4 h-4" />
               <span className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
                 Xóa thành viên

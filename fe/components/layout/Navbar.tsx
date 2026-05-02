@@ -47,7 +47,7 @@ export function Navbar() {
           <div className="flex-1 max-w-md hidden md:block">
             <button
               onClick={() => setIsGlobalSearchOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-all group shadow-inner"
+              className="w-full flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 transition group shadow-inner"
             >
               <Search className="w-4 h-4 group-hover:text-blue-500 transition-colors" />
               <span className="text-sm font-medium">Tìm kiếm tất cả tin nhắn</span>
@@ -58,7 +58,7 @@ export function Navbar() {
           <div className="flex items-center gap-3 max-[480px]:gap-2 max-[420px]:gap-1.5">
             <button
               onClick={() => setIsGlobalSearchOpen(true)}
-              className="md:hidden flex items-center gap-1.5 px-2 py-1.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl transition-all font-bold text-[10px] sm:text-xs"
+              className="md:hidden flex items-center gap-1.5 px-2 py-1.5 bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 rounded-xl transition font-bold text-[10px] sm:text-xs"
             >
               <Search className="w-3.5 h-3.5 sm:w-4 h-4" />
               <span className="hidden min-[400px]:inline">Tìm kiếm tất cả tin nhắn</span>

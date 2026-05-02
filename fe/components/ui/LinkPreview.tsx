@@ -56,7 +56,7 @@ export function LinkPreview({ url }: LinkPreviewProps) {
     >
       {preview.image && (
         <div className="aspect-video w-full overflow-hidden border-b border-gray-100 dark:border-slate-700 bg-gray-100 dark:bg-slate-900">
-          <img
+          <img width={400} height={400}
             src={preview.image}
             alt={preview.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

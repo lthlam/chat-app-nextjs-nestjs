@@ -15,8 +15,9 @@ export function CallControls({
   return (
     <div className="absolute bottom-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 z-20 px-6 py-4 bg-black/40 backdrop-blur-xl rounded-3xl border border-white/10 max-w-[95%]">
       <button
+        aria-label={isMuted ? "Bật mic" : "Tắt mic"}
         onClick={toggleMute}
-        className={`p-4 sm:p-5 rounded-full transition-all active:scale-90 ${
+        className={`p-4 sm:p-5 rounded-full transition active:scale-90 ${
           isMuted ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
         }`}
       >
@@ -25,8 +26,9 @@ export function CallControls({
 
       {callType === 'video' && (
         <button
+          aria-label={isVideoOff ? "Bật camera" : "Tắt camera"}
           onClick={toggleVideo}
-          className={`p-4 sm:p-5 rounded-full transition-all active:scale-90 ${
+          className={`p-4 sm:p-5 rounded-full transition active:scale-90 ${
             isVideoOff ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
           }`}
         >
@@ -35,8 +37,9 @@ export function CallControls({
       )}
       
       <button
+        aria-label="Kết thúc cuộc gọi"
         onClick={() => stopCall(true)}
-        className="p-5 sm:p-6 rounded-full bg-red-600 hover:bg-red-700 text-white transition-all shadow-xl hover:scale-110 active:scale-90"
+        className="p-5 sm:p-6 rounded-full bg-red-600 hover:bg-red-700 text-white transition shadow-xl hover:scale-110 active:scale-90"
       >
         <PhoneOff className="w-6 h-6 sm:w-7 sm:h-7" />
       </button>

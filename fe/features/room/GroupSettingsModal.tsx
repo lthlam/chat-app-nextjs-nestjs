@@ -358,7 +358,7 @@ export function GroupSettingsModal({
           <div className="sticky top-0 z-10 flex border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
             <button
               onClick={() => setTab('settings')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition-all relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
                 tab === 'settings'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
@@ -369,7 +369,7 @@ export function GroupSettingsModal({
             </button>
             <button
               onClick={() => setTab('members')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition-all relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
                 tab === 'members'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
@@ -380,7 +380,7 @@ export function GroupSettingsModal({
             </button>
             <button
               onClick={() => setTab('add')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition-all relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
                 tab === 'add'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
@@ -391,7 +391,7 @@ export function GroupSettingsModal({
             </button>
             <button
               onClick={() => setTab('remove')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition-all relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
                 tab === 'remove'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
@@ -450,7 +450,7 @@ export function GroupSettingsModal({
         <div className="sticky bottom-0 bg-white/40 dark:bg-slate-900/40 p-4 backdrop-blur-md shrink-0 border-t border-slate-100 dark:border-slate-800">
           <button
             onClick={handleLeaveRoom}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all shadow-sm"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 rounded-2xl font-bold transition shadow-sm"
           >
             <LogOut className="w-4 h-4 text-slate-400" />
             Rời nhóm

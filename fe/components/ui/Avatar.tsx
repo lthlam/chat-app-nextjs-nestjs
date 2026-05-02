@@ -29,7 +29,7 @@ export function Avatar({ src, name, size = 'md', className = '', status, showSta
     <div className={`relative flex-shrink-0 rounded-full ${currentSizeClass} ${className}`} style={customSizeStyle}>
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold shadow-sm ring-1 ring-black/5 dark:ring-white/10">
         {src ? (
-          <img src={src} alt={name || 'Avatar'} className="w-full h-full object-cover" />
+          <img width={400} height={400} src={src} alt={name || 'Avatar'} className="w-full h-full object-cover" />
         ) : (
           <span>{name ? name.charAt(0).toUpperCase() : '?'}</span>
         )}

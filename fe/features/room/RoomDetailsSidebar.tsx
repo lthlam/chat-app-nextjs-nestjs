@@ -186,7 +186,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-3 xl:p-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-3 xl:p-4 custom-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
@@ -225,7 +225,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
                     ) : item.type === 'video' ? (
                       <video src={item.content} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     ) : (
-                      <img src={item.content} alt="media" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <img width={400} height={400} src={item.content} alt="media" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     )}
                     {item.type === 'video' && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors">
@@ -249,7 +249,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
                     href={link.startsWith('http') ? link : `https://${link}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800 group shadow-sm"
+                    className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-800 group shadow-sm"
                   >
                     <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 shrink-0">
                       <LinkIcon className="w-5 h-5" />
@@ -273,7 +273,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
           <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50">
             <button
               onClick={handleBlockConfirm}
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition shadow-sm ${
                 isBlocked
                   ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'

@@ -280,12 +280,12 @@ export function MessageInput() {
                         const isAlbum = r.type === 'album';
 
                         if (isImage && r.content) {
-                          return <img src={r.content} alt="Preview" className="h-10 w-10 rounded-lg object-cover bg-gray-200 shrink-0 shadow-sm" />;
+                          return <img width={400} height={400} src={r.content} alt="Preview" className="h-10 w-10 rounded-lg object-cover bg-gray-200 shrink-0 shadow-sm" />;
                         }
                         if (isAlbum && r.content) {
                           try {
                             const urls = JSON.parse(r.content);
-                            return <img src={urls[0]} alt="Preview" className="h-10 w-10 rounded-lg object-cover bg-gray-200 shrink-0 shadow-sm" />;
+                            return <img width={400} height={400} src={urls[0]} alt="Preview" className="h-10 w-10 rounded-lg object-cover bg-gray-200 shrink-0 shadow-sm" />;
                           } catch {
                             return null;
                           }
@@ -345,7 +345,7 @@ export function MessageInput() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={!currentRoomId || isUploading || isAnyBlocked}
-              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
+              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
             >
               <ImagePlus className="w-6 h-6 max-[420px]:w-5 max-[420px]:h-5" />
               <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
@@ -356,7 +356,7 @@ export function MessageInput() {
               type="button"
               onClick={() => setShowRecorder(true)}
               disabled={!currentRoomId || isUploading || isAnyBlocked}
-              className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
+              className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full transition disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
             >
               <Mic className="w-6 h-6 max-[420px]:w-5 max-[420px]:h-5" />
               <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
@@ -367,7 +367,7 @@ export function MessageInput() {
               type="button"
               onClick={handleSendLocation}
               disabled={!currentRoomId || isUploading || isAnyBlocked}
-              className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
+              className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-full transition disabled:opacity-30 disabled:cursor-not-allowed group/tooltip relative"
             >
               <MapPin className="w-6 h-6 max-[420px]:w-5 max-[420px]:h-5" />
               <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">
@@ -414,7 +414,7 @@ export function MessageInput() {
                           >
                             <div className="w-6 h-6 rounded-full overflow-hidden shrink-0">
                               {member.avatar_url ? (
-                                <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
+                                <img width={400} height={400} src={member.avatar_url} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold">
                                   {member.username.charAt(0).toUpperCase()}
@@ -463,7 +463,7 @@ export function MessageInput() {
             <button
               type="submit"
               disabled={!currentRoomId || isLoading || !content.trim() || isAnyBlocked}
-              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all disabled:opacity-30 group/tooltip relative"
+              className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition disabled:opacity-30 group/tooltip relative"
             >
               <Send className="w-6 h-6 max-[420px]:w-5 max-[420px]:h-5" />
               <span className="pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/tooltip:opacity-100 z-50 dark:bg-slate-700">

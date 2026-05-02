@@ -164,7 +164,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
         </div>
 
         {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="max-h-[60vh] overflow-y-auto overscroll-contain custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
           {query && !isLoading && results.length === 0 && (
             <div className="p-8 text-center text-sm text-slate-400 font-medium">
               Không tìm thấy kết quả nào.
@@ -197,7 +197,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
                     >
                       <div className="w-10 h-10 rounded-full border border-blue-200 dark:border-blue-800 overflow-hidden shrink-0 shadow-sm bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
                         {group.roomAvatar ? (
-                          <img src={group.roomAvatar} alt={group.roomName} className="w-full h-full object-cover" />
+                          <img width={400} height={400} src={group.roomAvatar} alt={group.roomName} className="w-full h-full object-cover" />
                         ) : (
                           <span>
                             {group.isGroup ? '👥' : group.roomName.charAt(0).toUpperCase()}
@@ -239,7 +239,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
                           >
                             <div className="w-7 h-7 rounded-full border border-blue-200 dark:border-blue-800 overflow-hidden shrink-0 mt-0.5 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
                               {msg.sender.avatar_url ? (
-                                <img src={msg.sender.avatar_url} alt={msg.sender.username} className="w-full h-full object-cover" />
+                                <img width={400} height={400} src={msg.sender.avatar_url} alt={msg.sender.username} className="w-full h-full object-cover" />
                               ) : (
                                 <span>
                                   {msg.sender.username.charAt(0).toUpperCase()}

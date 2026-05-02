@@ -28,6 +28,12 @@ export const RoomItem = memo(function RoomItem({ room, currentRoomId, onSelect, 
     <div
       role="button"
       tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(room.id);
+        }
+      }}
       onClick={() => onSelect(room.id)}
       className={`group relative w-full text-left px-4 py-3 max-[420px]:px-3 max-[420px]:py-2.5 max-[380px]:px-2.5 max-[380px]:py-2 hover:bg-white/80 transition dark:hover:bg-slate-800 flex items-center justify-between ${
         currentRoomId === room.id ? 'bg-white dark:bg-slate-800' : ''
@@ -72,7 +78,7 @@ export const RoomItem = memo(function RoomItem({ room, currentRoomId, onSelect, 
           {onDeleteChat && (
             <button
               onClick={(e) => { e.stopPropagation(); onDeleteChat?.(room.id, e); }}
-              className="group/trash absolute inset-0 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
+              className="group/trash absolute inset-0 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition focus:opacity-100"
             >
               <Trash2 className="w-4 h-4" />
               <span className="pointer-events-none absolute top-full right-0 mt-2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition group-hover/trash:opacity-100 z-50 dark:bg-slate-700">

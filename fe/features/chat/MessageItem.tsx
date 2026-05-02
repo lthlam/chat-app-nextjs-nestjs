@@ -139,9 +139,18 @@ const MessageItemBase = memo(function MessageItemBase({
             highlightedMessageId === String(message.id)
               ? 'ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 scale-[1.02] shadow-lg shadow-blue-500/20'
               : ''
-          } transition-all duration-300 active:scale-[0.98] active:opacity-90`}
+          } transition duration-300 active:scale-[0.98] active:opacity-90`}
           onMouseEnter={() => onOpenActionMenu(message.id)}
           onMouseLeave={() => onScheduleCloseActionMenu(message.id)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenActionMenu(message.id);
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation();
             onOpenActionMenu(message.id);
@@ -238,7 +247,7 @@ const MessageItemBase = memo(function MessageItemBase({
                     {lastSeenByUsers.slice(0, 3).map((u) => (
                       <div key={u.id} className="w-3.5 h-3.5 rounded-full border border-white dark:border-slate-900 bg-gray-200 overflow-hidden" title={u.username}>
                         {u.avatar_url ? (
-                          <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
+                          <img width={400} height={400} src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-400 text-white text-[7px] uppercase">{u.username.charAt(0)}</div>
                         )}

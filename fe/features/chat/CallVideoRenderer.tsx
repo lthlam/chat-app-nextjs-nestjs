@@ -35,7 +35,7 @@ export function CallVideoRenderer({
             <div className="flex flex-col items-center gap-4">
               <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-blue-600 flex items-center justify-center text-3xl sm:text-4xl font-bold shadow-2xl border-4 border-slate-700 overflow-hidden">
                 {otherPerson?.avatar_url ? (
-                  <img src={otherPerson.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                  <img width={400} height={400} src={otherPerson.avatar_url} alt={displayName} className="w-full h-full object-cover" />
                 ) : (
                   (displayName || 'U').charAt(0).toUpperCase()
                 )}

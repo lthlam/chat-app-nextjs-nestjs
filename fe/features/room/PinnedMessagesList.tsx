@@ -110,7 +110,7 @@ export function PinnedMessagesList({
                         e.stopPropagation();
                         onUnpin(message.id);
                       }}
-                      className="p-1 rounded-full text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all opacity-0 group-hover:opacity-100"
+                      className="p-1 rounded-full text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition opacity-0 group-hover:opacity-100"
                       title="Bỏ ghim"
                     >
                       <PinOff className="h-3.5 w-3.5" />

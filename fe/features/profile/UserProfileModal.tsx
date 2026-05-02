@@ -147,7 +147,7 @@ export function UserProfileModal({ user, isOpen, onClose, onBlockSuccess }: User
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-              className="relative w-full max-w-[320px] overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-100 dark:border-white/10"
+              className="relative w-full max-w-[320px] overflow-hidden overscroll-contain rounded-[2.5rem] bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-100 dark:border-white/10"
             >
               <button
                 onClick={onClose}
@@ -198,7 +198,7 @@ export function UserProfileModal({ user, isOpen, onClose, onBlockSuccess }: User
                     <button
                       onClick={handleRemoveFriend}
                       disabled={isLoading}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all active:scale-[0.98] dark:bg-slate-800 dark:text-slate-400 group"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition active:scale-[0.98] dark:bg-slate-800 dark:text-slate-400 group"
                     >
                       <UserMinus className="w-4 h-4 group-hover:scale-105 transition-transform duration-300" />
                       Hủy kết bạn
@@ -219,7 +219,7 @@ export function UserProfileModal({ user, isOpen, onClose, onBlockSuccess }: User
                     <button
                       onClick={handleBlock}
                       disabled={isLoading}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all active:scale-[0.98] dark:bg-slate-800 dark:text-slate-400 group border border-slate-200 dark:border-slate-700"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition active:scale-[0.98] dark:bg-slate-800 dark:text-slate-400 group border border-slate-200 dark:border-slate-700"
                     >
                       <Ban className="w-4 h-4 group-hover:-rotate-6 transition-transform duration-300 opacity-70" />
                       Chặn
