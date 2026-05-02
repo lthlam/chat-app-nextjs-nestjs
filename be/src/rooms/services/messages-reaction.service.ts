@@ -32,6 +32,7 @@ export class MessagesReactionService {
         where: { id: messageId },
         relations: [
           'room',
+          'room.members',
           'reactions',
           'reactions.user',
           'reads',

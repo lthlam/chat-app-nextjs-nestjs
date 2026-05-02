@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Users, Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { formatLastMessageTime } from '@/utils/timeAgo';
@@ -8,14 +9,14 @@ import { Avatar } from './Avatar';
 interface RoomItemProps {
   room: any;
   currentRoomId: string | null;
-  onSelect: () => void;
-  onDeleteChat?: (e: React.MouseEvent) => void;
+  onSelect: (roomId: string) => void;
+  onDeleteChat?: (roomId: string, e: React.MouseEvent) => void;
   getRoomDisplayName: (room: any) => string;
   getLastMessagePreview: (room: any) => string;
 }
 
-export function RoomItem({ room, currentRoomId, onSelect, onDeleteChat, getRoomDisplayName, getLastMessagePreview }: RoomItemProps) {
-  const { user } = useAuthStore();
+export const RoomItem = memo(function RoomItem({ room, currentRoomId, onSelect, onDeleteChat, getRoomDisplayName, getLastMessagePreview }: RoomItemProps) {
+  const user = useAuthStore(s => s.user);
   const otherUser = !room.is_group_chat
     ? room.members?.find((m: any) => m.id !== user?.id)
     : null;
@@ -27,7 +28,7 @@ export function RoomItem({ room, currentRoomId, onSelect, onDeleteChat, getRoomD
     <div
       role="button"
       tabIndex={0}
-      onClick={onSelect}
+      onClick={() => onSelect(room.id)}
       className={`group relative w-full text-left px-4 py-3 max-[420px]:px-3 max-[420px]:py-2.5 max-[380px]:px-2.5 max-[380px]:py-2 hover:bg-white/80 transition dark:hover:bg-slate-800 flex items-center justify-between ${
         currentRoomId === room.id ? 'bg-white dark:bg-slate-800' : ''
       }`}
@@ -70,7 +71,7 @@ export function RoomItem({ room, currentRoomId, onSelect, onDeleteChat, getRoomD
           {/* Delete Button - shown on hover */}
           {onDeleteChat && (
             <button
-              onClick={onDeleteChat}
+              onClick={(e) => { e.stopPropagation(); onDeleteChat?.(room.id, e); }}
               className="group/trash absolute inset-0 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-all focus:opacity-100"
             >
               <Trash2 className="w-4 h-4" />
@@ -87,4 +88,4 @@ export function RoomItem({ room, currentRoomId, onSelect, onDeleteChat, getRoomD
       </div>
     </div>
   );
-}
+});

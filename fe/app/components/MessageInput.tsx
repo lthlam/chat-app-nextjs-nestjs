@@ -9,12 +9,18 @@ import { ImagePlus, Send, X, Mic, MapPin, Loader2 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { AudioRecorder } from './AudioRecorder';
 import { messagesApi, roomsApi } from '@/lib/api';
-import heic2any from 'heic2any';
-import imageCompression from 'browser-image-compression';
+
+
 
 export function MessageInput() {
-  const { currentRoomId, replyingTo, setReplyingTo, rooms, setShouldJumpToLatest } = useChatStore();
-  const { user, blockedUsers, blockedByUsers } = useAuthStore();
+  const currentRoomId = useChatStore(s => s.currentRoomId);
+  const replyingTo = useChatStore(s => s.replyingTo);
+  const setReplyingTo = useChatStore(s => s.setReplyingTo);
+  const rooms = useChatStore(s => s.rooms);
+  const setShouldJumpToLatest = useChatStore(s => s.setShouldJumpToLatest);
+  const user = useAuthStore(s => s.user);
+  const blockedUsers = useAuthStore(s => s.blockedUsers);
+  const blockedByUsers = useAuthStore(s => s.blockedByUsers);
   const showToast = useUiStore((state) => state.showToast);
   const [content, setContent] = useState('');
   const [mentions, setMentions] = useState<string[]>([]);
@@ -180,6 +186,7 @@ export function MessageInput() {
         const isHEIC = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
         if (isHEIC) {
           try {
+            const heic2any = (await import('heic2any')).default;
             const convertedBlob = await heic2any({
               blob: file,
               toType: 'image/jpeg',
@@ -203,6 +210,7 @@ export function MessageInput() {
               maxWidthOrHeight: 1600,
               useWebWorker: true,
             };
+            const imageCompression = (await import('browser-image-compression')).default;
             const compressedFile = await imageCompression(file, options);
             file = new File([compressedFile], file.name, { type: compressedFile.type });
           } catch (error) {

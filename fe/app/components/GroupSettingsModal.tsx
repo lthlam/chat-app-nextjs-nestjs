@@ -33,8 +33,10 @@ export function GroupSettingsModal({
   onClose,
   onLeaveSuccess,
 }: GroupSettingsModalProps) {
-  const { setCurrentRoomId, setRooms, rooms } = useChatStore();
-  const { user } = useAuthStore();
+  const setCurrentRoomId = useChatStore(s => s.setCurrentRoomId);
+  const setRooms = useChatStore(s => s.setRooms);
+  const rooms = useChatStore(s => s.rooms);
+  const user = useAuthStore(s => s.user);
   const showToast = useUiStore((state) => state.showToast);
   const requestConfirm = useUiStore((state) => state.requestConfirm);
   const [members, setMembers] = useState<User[]>([]);

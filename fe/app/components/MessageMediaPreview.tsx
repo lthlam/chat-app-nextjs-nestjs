@@ -10,7 +10,7 @@ interface MessageMediaPreviewProps {
   message: Message;
   isCurrentUser: boolean;
   onJumpToMessage: (id: string) => void;
-  renderHighlightedText: (text: string, highlight: boolean) => React.ReactNode;
+  renderHighlightedText: (text: string, highlight: boolean, mentions?: any[]) => React.ReactNode;
   isActiveSearchTarget: boolean;
 }
 
@@ -310,7 +310,7 @@ export function MessageMediaPreview({
         </button>
       )}
       <div className="leading-relaxed break-all">
-        {renderHighlightedText(message.content || '', isActiveSearchTarget)}
+        {renderHighlightedText(message.content || '', isActiveSearchTarget, message.mentions)}
       </div>
       {firstUrl && <LinkPreview url={firstUrl.startsWith('http') ? firstUrl : `https://${firstUrl}`} />}
     </>

@@ -10,6 +10,8 @@ interface MediaGalleryModalProps {
   onClose: () => void;
 }
 
+
+
 export function MediaGalleryModal({ roomId, isOpen, onClose }: MediaGalleryModalProps) {
   const [activeTab, setActiveTab] = useState<'media' | 'links'>('media');
   const [media, setMedia] = useState<Message[]>([]);

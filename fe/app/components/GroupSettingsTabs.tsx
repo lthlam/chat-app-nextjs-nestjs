@@ -41,7 +41,7 @@ export function GroupSettingsInfoTab({
 }
 
 export function GroupMembersTab({ members, ownerId, user, friendIds, pendingFriendIds, handleSendFriendRequest }: any) {
-  const { setSelectedUserProfileUser } = useChatStore();
+  const setSelectedUserProfileUser = useChatStore(s => s.setSelectedUserProfileUser);
 
   if (members.length === 0) return <div className="text-center text-gray-500 text-sm py-4">Không có thành viên</div>;
   return (

@@ -10,6 +10,8 @@ import { useUiStore } from '@/store/uiStore';
 
 import { motion } from 'framer-motion';
 
+const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+
 interface RoomDetailsSidebarProps {
   roomId: string | null;
   isGroup?: boolean;
@@ -17,7 +19,10 @@ interface RoomDetailsSidebarProps {
 }
 
 export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSidebarProps) {
-  const { user, blockedUsers, addBlockedUser, removeBlockedUser } = useAuthStore();
+  const user = useAuthStore(s => s.user);
+  const blockedUsers = useAuthStore(s => s.blockedUsers);
+  const addBlockedUser = useAuthStore(s => s.addBlockedUser);
+  const removeBlockedUser = useAuthStore(s => s.removeBlockedUser);
   const showToast = useUiStore(state => state.showToast);
   const requestConfirm = useUiStore(state => state.requestConfirm);
 
@@ -70,15 +75,15 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
     if (!roomId) return;
     setLoading(true);
     try {
-      const mediaData = await messagesApi.getMedia(roomId);
+      const [mediaData, msgData] = await Promise.all([
+        messagesApi.getMedia(roomId),
+        messagesApi.getMessages(roomId, 100)
+      ]);
       setMedia(mediaData);
-      
-      const msgData = await messagesApi.getMessages(roomId, 100);
-      const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
       const foundLinks: string[] = [];
       msgData.data.forEach(m => {
         if (m.type === 'text') {
-          const mLinks = m.content.match(urlRegex);
+          const mLinks = m.content.match(URL_REGEX);
           if (mLinks) foundLinks.push(...mLinks);
         }
       });
@@ -97,7 +102,6 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
   useEffect(() => {
     if (!roomId) return;
     const socket = getSocket();
-    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
 
     const handleNewMessage = (msg: Message) => {
       const msgRoomId = (msg as any).roomId || (msg as any).room?.id;
@@ -109,7 +113,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
           return [msg, ...prev];
         });
       } else if (msg.type === 'text') {
-        const mLinks = msg.content.match(urlRegex);
+        const mLinks = msg.content.match(URL_REGEX);
         if (mLinks) {
           setLinks(prev => {
             const newLinks = mLinks.filter(l => !prev.includes(l));

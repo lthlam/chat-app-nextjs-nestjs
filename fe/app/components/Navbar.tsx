@@ -5,38 +5,31 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Moon, Sun, Search } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { Logo } from './Logo';
-import { MyProfileModal } from './MyProfileModal';
-import { GlobalSearchModal } from './GlobalSearchModal';
+import dynamic from 'next/dynamic';
+const MyProfileModal = dynamic(() => import('./MyProfileModal').then(mod => mod.MyProfileModal), { ssr: false });
+const GlobalSearchModal = dynamic(() => import('./GlobalSearchModal').then(mod => mod.GlobalSearchModal), { ssr: false });
 import { Avatar } from './Avatar';
 
 export function Navbar() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
-  const [isDark, setIsDark] = useState(false);
+  const user = useAuthStore(s => s.user);
+  const logout = useAuthStore(s => s.logout);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true;
+  });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem('theme');
-    
-    // Default to dark if no preference is saved
-    const nextIsDark = saved ? saved === 'dark' : true;
-    
-    document.documentElement.classList.toggle('dark', nextIsDark);
-    setIsDark(nextIsDark);
-    
-    // Save default setting if it didn't exist
-    if (!saved) {
-      localStorage.setItem('theme', 'dark');
-    }
-  }, []);
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
+    setIsDark(prev => !prev);
   };
 
   const handleLogout = () => {
@@ -113,4 +106,3 @@ export function Navbar() {
     </nav>
   );
 }
-

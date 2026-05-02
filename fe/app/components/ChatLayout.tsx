@@ -10,18 +10,34 @@ import { Phone, Settings, Video, Menu, ChevronLeft, Search } from 'lucide-react'
 import { Navbar } from './Navbar';
 import { RoomList } from './RoomList';
 import { ChatMessages } from './ChatMessages';
+import dynamic from 'next/dynamic';
 import { MessageInput } from './MessageInput';
-import { GroupSettingsModal } from './GroupSettingsModal';
-import { UserProfileModal } from './UserProfileModal';
 import { RoomDetailsSidebar } from './RoomDetailsSidebar';
+
+const GroupSettingsModal = dynamic(() => import('./GroupSettingsModal').then(mod => mod.GroupSettingsModal), { ssr: false });
+const UserProfileModal = dynamic(() => import('./UserProfileModal').then(mod => mod.UserProfileModal), { ssr: false });
 import { useUiStore } from '@/store/uiStore';
 import { formatTimeAgo } from '@/utils/timeAgo';
 import { Avatar } from './Avatar';
 
 export function ChatLayout() {
-  const { rooms, currentRoomId, setCurrentRoomId, removeRoom, updateUserStatus, isSearchOpen, setIsSearchOpen, selectedUserProfileUser, setSelectedUserProfileUser } = useChatStore();
+  const rooms = useChatStore((s) => s.rooms);
+  const currentRoomId = useChatStore((s) => s.currentRoomId);
+  const setCurrentRoomId = useChatStore((s) => s.setCurrentRoomId);
+  const removeRoom = useChatStore((s) => s.removeRoom);
+  const updateUserStatus = useChatStore((s) => s.updateUserStatus);
+  const isSearchOpen = useChatStore((s) => s.isSearchOpen);
+  const setIsSearchOpen = useChatStore((s) => s.setIsSearchOpen);
+  const selectedUserProfileUser = useChatStore((s) => s.selectedUserProfileUser);
+  const setSelectedUserProfileUser = useChatStore((s) => s.setSelectedUserProfileUser);
 
-  const { user, setBlockedUsers, blockedUsers, blockedByUsers, setBlockedByUsers, addBlockedByUser, removeBlockedByUser } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const setBlockedUsers = useAuthStore((s) => s.setBlockedUsers);
+  const blockedUsers = useAuthStore((s) => s.blockedUsers);
+  const blockedByUsers = useAuthStore((s) => s.blockedByUsers);
+  const setBlockedByUsers = useAuthStore((s) => s.setBlockedByUsers);
+  const addBlockedByUser = useAuthStore((s) => s.addBlockedByUser);
+  const removeBlockedByUser = useAuthStore((s) => s.removeBlockedByUser);
   const [showSettings, setShowSettings] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 

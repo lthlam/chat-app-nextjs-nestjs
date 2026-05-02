@@ -219,7 +219,7 @@ export function useWebRTC({ roomId, role, callType, user, hasHydrated, showToast
     } finally {
       isProcessingOfferRef.current = false;
     }
-  }, [roomId, stopCall, getOrCreatePeerConnection, ensureLocalStream, iceServers]);
+  }, [roomId, stopCall, getOrCreatePeerConnection, ensureLocalStream]);
 
   // Fetch ICE servers once on mount
   useEffect(() => {
@@ -227,7 +227,7 @@ export function useWebRTC({ roomId, role, callType, user, hasHydrated, showToast
     roomsApi.getIceServers().then(setIceServers).catch(err => {
       console.error('Failed to fetch ICE servers', err);
     });
-  }, [hasHydrated, user?.id, roomId]);
+  }, [hasHydrated, user, roomId]);
 
   useEffect(() => {
     if (!hasHydrated || !user || !roomId) return;

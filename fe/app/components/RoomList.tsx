@@ -1,17 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState, UIEvent } from 'react';
+import { useEffect, useRef, useState, UIEvent, useMemo, useCallback } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
 import { useUiStore } from '@/store/uiStore';
 import { roomsApi, friendsApi } from '@/lib/api';
 import { getSocket } from '@/lib/socket';
+import dynamic from 'next/dynamic';
 import { Search, Check, X } from 'lucide-react';
-import { CreateGroupModal } from './CreateGroupModal';
-import { AddFriendModal } from './AddFriendModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomItem } from './RoomItem';
 import { FriendItem } from './FriendItem';
+import { useRoomListSocket } from '@/hooks/useRoomListSocket';
+
+const CreateGroupModal = dynamic(() => import('./CreateGroupModal').then(mod => mod.CreateGroupModal), { ssr: false });
+const AddFriendModal = dynamic(() => import('./AddFriendModal').then(mod => mod.AddFriendModal), { ssr: false });
+
+const IMAGE_UPLOAD_REGEX = /\/uploads\/chat\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i;
+const IMAGE_EXT_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
 
 interface RoomListProps {
   onRoomSelected?: () => void;
@@ -19,8 +25,14 @@ interface RoomListProps {
 
 export function RoomList({ onRoomSelected }: RoomListProps) {
   const CHAT_PAGE_SIZE = 10;
-  const { rooms, setRooms, currentRoomId, setCurrentRoomId, markRoomAsRead, clearedAtByRoom, setClearedAt } = useChatStore();
-  const { user } = useAuthStore();
+  const rooms = useChatStore(s => s.rooms);
+  const setRooms = useChatStore(s => s.setRooms);
+  const currentRoomId = useChatStore(s => s.currentRoomId);
+  const setCurrentRoomId = useChatStore(s => s.setCurrentRoomId);
+  const markRoomAsRead = useChatStore(s => s.markRoomAsRead);
+  const clearedAtByRoom = useChatStore(s => s.clearedAtByRoom);
+  const setClearedAt = useChatStore(s => s.setClearedAt);
+  const user = useAuthStore(s => s.user);
   const requestConfirm = useUiStore((state) => state.requestConfirm);
   const showToast = useUiStore((state) => state.showToast);
   const [search, setSearch] = useState('');
@@ -69,8 +81,8 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
       // Fallback detection for legacy data
       const isImageContent =
         content.startsWith('data:image/') ||
-        /\/uploads\/chat\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i.test(content) ||
-        /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(content);
+        IMAGE_UPLOAD_REGEX.test(content) ||
+        IMAGE_EXT_REGEX.test(content);
       if (isImageContent) previewText = '[Hình ảnh]';
     }
 
@@ -87,315 +99,58 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
     return previewText;
   };
 
-  const getRoomDisplayName = (room: any) => {
+  const getRoomDisplayName = useCallback((room: any) => {
     if (room?.is_group_chat) {
       return room?.name || 'Group Chat';
     }
 
     const otherUser = room?.members?.find((member: any) => member.id !== user?.id);
     return otherUser?.username || room?.name || 'Direct Message';
-  };
+  }, [user?.id]);
 
   useEffect(() => {
-    const fetchRooms = async () => {
+    const fetchInitialData = async () => {
       try {
-        const data = await roomsApi.getRooms();
-        setRooms(data);
-        // Restore clearedAtByRoom from server so realtime scrubbing works after refresh
-        data.forEach((room: any) => {
+        const [roomsData, requestsData, friendsData] = await Promise.all([
+          roomsApi.getRooms().catch((e) => { console.error('Failed to fetch rooms:', e); return []; }),
+          friendsApi.getPending().catch((e) => { console.error('Failed to fetch requests:', e); return []; }),
+          friendsApi.getFriendList().catch((e) => { console.error('Failed to fetch friends:', e); return []; })
+        ]);
+
+        setRooms(roomsData);
+        roomsData.forEach((room: any) => {
           if (room.cleared_at) {
             setClearedAt(String(room.id), new Date(room.cleared_at).getTime());
           }
         });
+
+        setPendingRequests(requestsData as any);
+        setFriends(friendsData as any);
       } catch (error) {
-        console.error('Failed to fetch rooms:', error);
+        console.error('Failed to fetch initial data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRooms();
+    fetchInitialData();
   }, [setRooms, setClearedAt]);
 
-  useEffect(() => {
-    const fetchPendingRequests = async () => {
-      try {
-        const requests = await friendsApi.getPending() as any;
-        setPendingRequests(requests);
-      } catch (error) {
-        console.error('Failed to fetch requests:', error);
-      }
-    };
+  const handleSelectRoom = useCallback((roomId: string) => {
+    markRoomAsRead(roomId);
+    setCurrentRoomId(roomId);
+    onRoomSelected?.();
+  }, [markRoomAsRead, setCurrentRoomId, onRoomSelected]);
 
-    fetchPendingRequests();
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchPendingRequests();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleNewMessage = (message: any) => {
-      const roomId = message?.room?.id || message?.roomId || message?.room_id;
-      if (!roomId) return;
-
-      const normalizedRoomId = String(roomId);
-      const senderId = message?.sender?.id || message?.sender_id;
-      const senderName = message?.sender?.username || message?.sender_name;
-
-      setRooms((prevRooms: any[]) => {
-        const roomExists = prevRooms.some((r: any) => String(r.id) === normalizedRoomId);
-
-        if (roomExists) {
-          const updatedRooms = prevRooms.map((room: any) => {
-            if (String(room.id) !== normalizedRoomId) return room;
-            const clearedAtMs = clearedAtByRoom.get(normalizedRoomId) ?? 0;
-            const msgTs = new Date(message.created_at).getTime();
-            const isCleared = clearedAtMs > 0 && msgTs <= clearedAtMs;
-            return {
-              ...room,
-              last_message: {
-                id: message.id,
-                content: isCleared ? 'Tin nhắn không hiển thị' : message.content,
-                type: isCleared ? 'text' : message.type,
-                created_at: message.created_at,
-                sender_id: senderId,
-                sender_name: senderName,
-                is_unread_for_me:
-                  currentRoomId === normalizedRoomId ? false : senderId !== user?.id,
-              },
-            };
-          });
-
-          return updatedRooms.sort((a: any, b: any) => {
-            const aTime = a?.last_message?.created_at
-              ? new Date(a.last_message.created_at).getTime()
-              : new Date(a.created_at).getTime();
-            const bTime = b?.last_message?.created_at
-              ? new Date(b.last_message.created_at).getTime()
-              : new Date(b.created_at).getTime();
-            return bTime - aTime;
-          });
-        }
-
-        // Room was cleared — fetch it back then prepend
-        roomsApi.getRooms().then((freshRooms) => {
-          const found = freshRooms.find((r: any) => String(r.id) === normalizedRoomId);
-          if (found) {
-            if (found.cleared_at) {
-              setClearedAt(String(found.id), new Date(found.cleared_at).getTime());
-            }
-            setRooms((prev: any[]) => {
-              const withoutDupe = prev.filter((r: any) => String(r.id) !== normalizedRoomId);
-              return [found, ...withoutDupe].sort((a: any, b: any) => {
-                const aTime = a?.last_message?.created_at
-                  ? new Date(a.last_message.created_at).getTime()
-                  : new Date(a.created_at).getTime();
-                const bTime = b?.last_message?.created_at
-                  ? new Date(b.last_message.created_at).getTime()
-                  : new Date(b.created_at).getTime();
-                return bTime - aTime;
-              });
-            });
-          }
-        });
-
-        return prevRooms; // optimistic: keep unchanged until fetch completes
-      });
-    };
-
-    socket.on('new-message', handleNewMessage);
-    return () => {
-      socket.off('new-message', handleNewMessage);
-    };
-  }, [setRooms, user?.id, currentRoomId, clearedAtByRoom, setClearedAt]);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleMessageUpdated = (message: any) => {
-      const roomId = message?.room?.id || message?.roomId;
-      if (!roomId) return;
-
-      const normalizedRoomId = String(roomId);
-      const clearedAtMs = clearedAtByRoom.get(normalizedRoomId) ?? 0;
-      const msgTs = new Date(message.created_at).getTime();
-      const isCleared = clearedAtMs > 0 && msgTs <= clearedAtMs;
-
-      setRooms((prevRooms: any[]) =>
-        prevRooms.map((room: any) => {
-          if (String(room.id) !== normalizedRoomId) return room;
-          // Only patch last_message if this updated msg is the last one
-          if (room.last_message?.id && String(room.last_message.id) !== String(message.id)) return room;
-          return {
-            ...room,
-            last_message: {
-              ...room.last_message,
-              id: message.id,
-              content: isCleared ? 'Tin nhắn không hiển thị' : message.content,
-              type: isCleared ? 'text' : message.type,
-              deleted_at: message.deleted_at ?? null,
-            },
-          };
-        }),
-      );
-    };
-
-    socket.on('message-updated', handleMessageUpdated);
-    return () => {
-      socket.off('message-updated', handleMessageUpdated);
-    };
-  }, [setRooms, clearedAtByRoom]);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleMessagesSeen = (payload: { roomId?: string; user?: { id?: string } }) => {
-      const roomId = payload?.roomId;
-      const seenByUserId = payload?.user?.id;
-      if (!roomId || !seenByUserId) return;
-
-      // If the user who just read IS the current user → clear unread bold
-      if (String(seenByUserId) === String(user?.id)) {
-        setRooms((prevRooms: any[]) =>
-          prevRooms.map((room: any) => {
-            if (String(room.id) !== String(roomId)) return room;
-            if (!room.last_message) return room;
-            return {
-              ...room,
-              last_message: { ...room.last_message, is_unread_for_me: false },
-            };
-          }),
-        );
-      }
-    };
-
-    socket.on('messages-seen', handleMessagesSeen);
-    return () => {
-      socket.off('messages-seen', handleMessagesSeen);
-    };
-  }, [setRooms, user?.id]);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleRoomAdded = (payload: { room?: any }) => {
-      const incomingRoom = payload?.room;
-      if (!incomingRoom?.id) return;
-
-      setRooms((prevRooms: any[]) => {
-        const withoutSameRoom = prevRooms.filter(
-          (room) => String(room.id) !== String(incomingRoom.id),
-        );
-
-        return [incomingRoom, ...withoutSameRoom].sort((a: any, b: any) => {
-          const aTime = a?.last_message?.created_at
-            ? new Date(a.last_message.created_at).getTime()
-            : new Date(a.created_at).getTime();
-          const bTime = b?.last_message?.created_at
-            ? new Date(b.last_message.created_at).getTime()
-            : new Date(b.created_at).getTime();
-
-          return bTime - aTime;
-        });
-      });
-    };
-
-    socket.on('room-added', handleRoomAdded);
-    return () => {
-      socket.off('room-added', handleRoomAdded);
-    };
-  }, [setRooms]);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleFriendRemoved = (payload: { friendId?: string }) => {
-      if (!payload?.friendId) return;
-      setFriends((prev) =>
-        prev.filter((friend) => String(friend.id) !== String(payload.friendId)),
-      );
-    };
-
-    socket.on('friend-removed', handleFriendRemoved);
-    return () => {
-      socket.off('friend-removed', handleFriendRemoved);
-    };
-  }, []);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleFriendRequestReceived = (payload: {
-      requestId?: string;
-      sender?: {
-        id?: string;
-        username?: string;
-        email?: string;
-        avatar_url?: string;
-        status?: string;
-      };
-      created_at?: string;
-    }) => {
-      if (!payload?.requestId || !payload?.sender?.id) return;
-
-      setPendingRequests((prev) => {
-        const exists = prev.some((request) => String(request.id) === String(payload.requestId));
-        if (exists) return prev;
-
-        const nextRequest = {
-          id: payload.requestId,
-          sender: payload.sender,
-          created_at: payload.created_at,
-          status: 'pending',
-        };
-
-        return [nextRequest, ...prev];
-      });
-    };
-
-    socket.on('friend-request-received', handleFriendRequestReceived);
-    return () => {
-      socket.off('friend-request-received', handleFriendRequestReceived);
-    };
-  }, []);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    const handleFriendRequestAccepted = (payload: {
-      requestId?: string;
-      friend?: {
-        id?: string;
-        username?: string;
-        email?: string;
-        avatar_url?: string;
-        status?: string;
-      };
-    }) => {
-      const friend = payload?.friend;
-      if (!friend?.id) return;
-
-      setFriends((prev) => {
-        const exists = prev.some((item) => String(item.id) === String(friend.id));
-        if (exists) return prev;
-        return [friend, ...prev];
-      });
-
-      if (payload?.requestId) {
-        setPendingRequests((prev) =>
-          prev.filter((request) => String(request.id) !== String(payload.requestId)),
-        );
-      }
-    };
-
-    socket.on('friend-request-accepted', handleFriendRequestAccepted);
-    return () => {
-      socket.off('friend-request-accepted', handleFriendRequestAccepted);
-    };
-  }, []);
+  useRoomListSocket({
+    userId: user?.id,
+    currentRoomId,
+    clearedAtByRoom,
+    setRooms,
+    setClearedAt,
+    setFriends,
+    setPendingRequests
+  });
 
   useEffect(() => {
     joinedRoomIdsRef.current.clear();
@@ -426,22 +181,7 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
     };
   }, [rooms, user?.id]);
 
-  useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        const friendList = await friendsApi.getFriendList() as any;
-        setFriends(friendList);
-      } catch (error) {
-        console.error('Failed to fetch friends:', error);
-      }
-    };
 
-    fetchFriends();
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchFriends();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -455,35 +195,39 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
     setVisibleRoomCount(CHAT_PAGE_SIZE);
   }, [debouncedSearch, tab]);
 
-  const filteredRooms = [...rooms]
-    .filter((room) => {
-      const nameMatch = getRoomDisplayName(room).toLowerCase().includes(debouncedSearch);
-      if (!nameMatch) return false;
-      if (chatFilter === 'unread') return !!(room as any).last_message?.is_unread_for_me;
-      if (chatFilter === 'groups') return !!(room as any).is_group_chat;
-      // In 'all' tab, hide rooms that have no active messages (empty or cleared)
-      if (chatFilter === 'all') return !!(room as any).last_message;
-      return true;
-    })
-    // Chats with messages first
-    .sort((a: any, b: any) => {
-      const aHasMsg = !!a?.last_message;
-      const bHasMsg = !!b?.last_message;
-      if (aHasMsg !== bHasMsg) return bHasMsg ? 1 : -1;
+  const filteredRooms = useMemo(() => {
+    return rooms
+      .filter((room) => {
+        const nameMatch = getRoomDisplayName(room).toLowerCase().includes(debouncedSearch);
+        if (!nameMatch) return false;
+        if (chatFilter === 'unread') return !!(room as any).last_message?.is_unread_for_me;
+        if (chatFilter === 'groups') return !!(room as any).is_group_chat;
+        // In 'all' tab, hide rooms that have no active messages (empty or cleared)
+        if (chatFilter === 'all') return !!(room as any).last_message;
+        return true;
+      })
+      // Chats with messages first
+      .sort((a: any, b: any) => {
+        const aHasMsg = !!a?.last_message;
+        const bHasMsg = !!b?.last_message;
+        if (aHasMsg !== bHasMsg) return bHasMsg ? 1 : -1;
 
-      const aTime = a?.last_message?.created_at
-        ? new Date(a.last_message.created_at).getTime()
-        : new Date(a.created_at).getTime();
-      const bTime = b?.last_message?.created_at
-        ? new Date(b.last_message.created_at).getTime()
-        : new Date(b.created_at).getTime();
+        const aTime = a?.last_message?.created_at
+          ? new Date(a.last_message.created_at).getTime()
+          : new Date(a.created_at).getTime();
+        const bTime = b?.last_message?.created_at
+          ? new Date(b.last_message.created_at).getTime()
+          : new Date(b.created_at).getTime();
 
-      return bTime - aTime;
-    });
+        return bTime - aTime;
+      });
+  }, [rooms, debouncedSearch, chatFilter, getRoomDisplayName]);
 
-  const filteredFriends = friends.filter((friend) =>
-    (friend.username || '').toLowerCase().includes(debouncedSearch),
-  );
+  const filteredFriends = useMemo(() => {
+    return friends.filter((friend) =>
+      (friend.username || '').toLowerCase().includes(debouncedSearch),
+    );
+  }, [friends, debouncedSearch]);
 
   const visibleRooms = filteredRooms.slice(0, visibleRoomCount);
 
@@ -562,7 +306,7 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
     }
   };
 
-  const handleDeleteChat = async (roomId: string, e: React.MouseEvent) => {
+  const handleDeleteChat = useCallback(async (roomId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const confirmed = await requestConfirm({
       title: 'Xác nhận xóa',
@@ -592,7 +336,7 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
       console.error('Failed to clear chat history:', error);
       showToast('Không thể xóa lịch sử trò chuyện', 'error');
     }
-  };
+  }, [requestConfirm, setClearedAt, setRooms, currentRoomId, showToast]);
 
   return (
     <div className="w-full md:w-[320px] bg-blue-50/70 border-r border-blue-100 flex flex-col h-full dark:bg-slate-900 dark:border-slate-700">
@@ -719,12 +463,8 @@ export function RoomList({ onRoomSelected }: RoomListProps) {
                   key={room.id}
                   room={room}
                   currentRoomId={currentRoomId}
-                  onSelect={() => {
-                    markRoomAsRead(room.id);
-                    setCurrentRoomId(room.id);
-                    onRoomSelected?.();
-                  }}
-                  onDeleteChat={(e) => handleDeleteChat(room.id, e)}
+                  onSelect={handleSelectRoom}
+                  onDeleteChat={handleDeleteChat}
                   getRoomDisplayName={getRoomDisplayName}
                   getLastMessagePreview={getLastMessagePreview}
                 />

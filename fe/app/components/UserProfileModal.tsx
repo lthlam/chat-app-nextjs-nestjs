@@ -22,7 +22,8 @@ interface UserProfileModalProps {
 }
 
 export function UserProfileModal({ user, isOpen, onClose, onBlockSuccess }: UserProfileModalProps) {
-  const { blockedUsers, setBlockedUsers } = useAuthStore();
+  const blockedUsers = useAuthStore(s => s.blockedUsers);
+  const setBlockedUsers = useAuthStore(s => s.setBlockedUsers);
   const [isFriend, setIsFriend] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

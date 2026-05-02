@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
@@ -10,16 +10,31 @@ import { MessageSearchBar } from './MessageSearchBar';
 import { PinnedMessagesList } from './PinnedMessagesList';
 import { MessageItem } from './MessageItem';
 import { TypingIndicator } from './TypingIndicator';
-import { ForwardModal } from './ForwardModal';
+import dynamic from 'next/dynamic';
 import { ChevronsDown } from 'lucide-react';
+
+const ForwardModal = dynamic(() => import('./ForwardModal').then(mod => mod.ForwardModal), { ssr: false });
 import { useChatManager } from '@/hooks/useChatManager';
 import { useMessageSearch } from '@/hooks/useMessageSearch';
 
 export function ChatMessages() {
   const REACTION_CLOSE_DELAY_MS = 650;
   
-  const { messages, setMessages, setReplyingTo, rooms, currentRoomId, pendingJumpMessageId, setPendingJumpMessageId, pinnedMessages, setPinnedMessages, isSearchOpen, setIsSearchOpen } = useChatStore();
-  const { user, blockedUsers, blockedByUsers } = useAuthStore();
+  const messages = useChatStore((s) => s.messages);
+  const setMessages = useChatStore((s) => s.setMessages);
+  const setReplyingTo = useChatStore((s) => s.setReplyingTo);
+  const rooms = useChatStore((s) => s.rooms);
+  const currentRoomId = useChatStore((s) => s.currentRoomId);
+  const pendingJumpMessageId = useChatStore((s) => s.pendingJumpMessageId);
+  const setPendingJumpMessageId = useChatStore((s) => s.setPendingJumpMessageId);
+  const pinnedMessages = useChatStore((s) => s.pinnedMessages);
+  const setPinnedMessages = useChatStore((s) => s.setPinnedMessages);
+  const isSearchOpen = useChatStore((s) => s.isSearchOpen);
+  const setIsSearchOpen = useChatStore((s) => s.setIsSearchOpen);
+
+  const user = useAuthStore((s) => s.user);
+  const blockedUsers = useAuthStore((s) => s.blockedUsers);
+  const blockedByUsers = useAuthStore((s) => s.blockedByUsers);
   const [roomMembers, setRoomMembers] = useState<any[]>([]);
   const currentRoom = rooms.find((r) => r.id === currentRoomId);
 
@@ -40,8 +55,9 @@ export function ChatMessages() {
   const previousMessageCountRef = useRef(0);
   
   // UI States
-  const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
-  const [activeActionMenuMessageId, setActiveActionMenuMessageId] = useState<string | null>(null);
+  // UI States (moved to store for performance)
+  const setReactionPickerFor = useUiStore(s => s.setReactionPickerFor);
+  const setActiveActionMenuMessageId = useUiStore(s => s.setActiveActionMenuMessageId);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [forwardMessageId, setForwardMessageId] = useState<string | null>(null);
@@ -169,10 +185,8 @@ export function ChatMessages() {
     navigateSearchResult,
   } = useMessageSearch(currentRoomId, handleJumpToMessage);
 
-  const {
-    shouldJumpToLatest,
-    setShouldJumpToLatest,
-  } = useChatStore();
+  const shouldJumpToLatest = useChatStore(s => s.shouldJumpToLatest);
+  const setShouldJumpToLatest = useChatStore(s => s.setShouldJumpToLatest);
 
   useEffect(() => {
     if (shouldJumpToLatest) {
@@ -305,10 +319,10 @@ export function ChatMessages() {
   }, [debouncedSearchQuery]);
 
   // UI Actions
-  const openActionMenu = (id: string) => {
+  const openActionMenu = useCallback((id: string) => {
     if (actionCloseTimerRef.current) clearTimeout(actionCloseTimerRef.current);
     setActiveActionMenuMessageId(id);
-  };
+  }, [setActiveActionMenuMessageId]);
 
   const closeActionMenu = useCallback(() => {
     if (actionCloseTimerRef.current) clearTimeout(actionCloseTimerRef.current);
@@ -316,38 +330,38 @@ export function ChatMessages() {
     if (reactionOpenTimerRef.current) clearTimeout(reactionOpenTimerRef.current);
     setActiveActionMenuMessageId(null);
     setReactionPickerFor(null);
-  }, []);
+  }, [setActiveActionMenuMessageId, setReactionPickerFor]);
 
-  const scheduleCloseActionMenu = (id: string) => {
+  const scheduleCloseActionMenu = useCallback((id: string) => {
     if (actionCloseTimerRef.current) clearTimeout(actionCloseTimerRef.current);
     actionCloseTimerRef.current = setTimeout(() => {
       setActiveActionMenuMessageId(curr => curr === id ? null : curr);
     }, 280);
-  };
+  }, [setActiveActionMenuMessageId]);
 
-  const openReactionPicker = (id: string) => {
+  const openReactionPicker = useCallback((id: string) => {
     if (reactionCloseTimerRef.current) clearTimeout(reactionCloseTimerRef.current);
     if (reactionOpenTimerRef.current) clearTimeout(reactionOpenTimerRef.current);
     setReactionPickerFor(id);
-  };
+  }, [setReactionPickerFor]);
 
-  const scheduleOpenReactionPicker = (id: string) => {
+  const scheduleOpenReactionPicker = useCallback((id: string) => {
     if (reactionCloseTimerRef.current) clearTimeout(reactionCloseTimerRef.current);
     if (reactionOpenTimerRef.current) clearTimeout(reactionOpenTimerRef.current);
     reactionOpenTimerRef.current = setTimeout(() => {
       setReactionPickerFor(id);
     }, 180);
-  };
+  }, [setReactionPickerFor]);
 
-  const scheduleCloseReactionPicker = (id: string) => {
+  const scheduleCloseReactionPicker = useCallback((id: string) => {
     if (reactionOpenTimerRef.current) clearTimeout(reactionOpenTimerRef.current);
     if (reactionCloseTimerRef.current) clearTimeout(reactionCloseTimerRef.current);
     reactionCloseTimerRef.current = setTimeout(() => {
       setReactionPickerFor(curr => curr === id ? null : curr);
     }, REACTION_CLOSE_DELAY_MS);
-  };
+  }, [setReactionPickerFor]);
 
-  const handleReactionSelect = async (id: string, emoji: string) => {
+  const handleReactionSelect = useCallback(async (id: string, emoji: string) => {
     try {
       const updatedMessage = await messagesApi.addReaction(id, emoji);
       setMessages((prev) => prev.map((m) => m.id === (updatedMessage as Message).id ? (updatedMessage as Message) : m));
@@ -358,9 +372,9 @@ export function ChatMessages() {
     } catch (error) {
       console.error('Reaction failed:', error);
     }
-  };
+  }, [setMessages, closeActionMenu]);
 
-  const handleRemoveReaction = async (messageId: string, reactionId: string) => {
+  const handleRemoveReaction = useCallback(async (messageId: string, reactionId: string) => {
     try {
       const updatedMessage: any = await messagesApi.removeReaction(reactionId);
       if (updatedMessage && updatedMessage.id) {
@@ -369,9 +383,9 @@ export function ChatMessages() {
     } catch (error) {
       console.error('Failed to remove reaction:', error);
     }
-  };
+  }, [setMessages]);
 
-  const handleTogglePin = async (id: string, isPinned: boolean) => {
+  const handleTogglePin = useCallback(async (id: string, isPinned: boolean) => {
     try {
       if (isPinned) {
         await messagesApi.unpinMessage(id);
@@ -390,9 +404,9 @@ export function ChatMessages() {
     } catch (error) {
       console.error('Toggle pin failed:', error);
     }
-  };
+  }, [messages, setMessages, setPinnedMessages, closeActionMenu]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await messagesApi.deleteMessage(id);
       setMessages((prev) => prev.map((m) => m.id === id ? ({ ...m, content: 'Tin nhắn này đã bị xoá', deleted_at: new Date().toISOString() } as Message) : m));
@@ -400,7 +414,17 @@ export function ChatMessages() {
     } catch (error) {
       console.error('Delete failed:', error);
     }
-  };
+  }, [setMessages, closeActionMenu]);
+
+  const handleReply = useCallback((m: Message) => {
+    setReplyingTo(m);
+    closeActionMenu();
+  }, [setReplyingTo, closeActionMenu]);
+
+  const handleForward = useCallback((id: string) => {
+    setForwardMessageId(id);
+    closeActionMenu();
+  }, [closeActionMenu]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -412,12 +436,185 @@ export function ChatMessages() {
     previousMessageCountRef.current = messages.length;
   }, [messages, isPrependingMessagesRef]);
 
+  const activeSearchId = activeSearchResultIndex >= 0 ? searchResults[activeSearchResultIndex]?.id : null;
+  const pinnedMsgs = [...pinnedMessages].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+
+
+  // Use native passive scroll listener for better performance (#8)
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const c = container;
+      const isNearBottom = c.scrollHeight - c.scrollTop - c.clientHeight <= 100;
+      shouldStickToBottomRef.current = isNearBottom;
+      setShowScrollBottom(!isNearBottom && c.scrollTop < c.scrollHeight - c.clientHeight - 200);
+      
+      // Load older messages (scroll up)
+      if (c.scrollTop <= 50 && !isLoadingOlder && hasOlderMessages && !isJumpingRef.current) {
+        loadOlder(c.scrollHeight, c.scrollTop).then((res) => {
+          if (res && messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight - res.prevH + res.prevT;
+          }
+        });
+      }
+      
+      // Load newer messages (scroll down)
+      const isAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight <= 30;
+      if (isAtBottom && !isLoadingNewer && hasNewerMessages && !isJumpingRef.current) {
+        loadNewer(c.scrollHeight, c.scrollTop).then((res) => {
+          if (res && messagesContainerRef.current) {
+            const newC = messagesContainerRef.current;
+            newC.scrollTop = res.prevH - newC.clientHeight;
+          }
+        });
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isLoadingOlder, hasOlderMessages, isLoadingNewer, hasNewerMessages, loadOlder, loadNewer]);
+
+
+  // Pre-compute latest own message id — avoids O(n²) .slice().every() per message
+  const latestOwnMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender?.id === user?.id) return messages[i].id;
+    }
+    return null;
+  }, [messages, user?.id]);
+
+  // Pre-compute message list content to avoid IIFE in JSX and O(n) work on every render
+  const renderedMessages = useMemo(() => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-400 font-medium">
+          Loading conversation...
+        </div>
+      );
+    }
+    if (messages.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-400 italic">
+          No messages yet. Say hi!
+        </div>
+      );
+    }
+
+    const lastSeenMessageIdByUser = new Map<string, { messageId: string; user: any }>();
+    messages.forEach((msg) => {
+      (msg.reads || []).forEach((read: any) => {
+        if (read.user?.id && read.user.id !== user?.id) {
+          lastSeenMessageIdByUser.set(read.user.id, { messageId: msg.id, user: read.user });
+        }
+      });
+    });
+
+    const lastSeenByUsers = new Map<string, any[]>();
+    lastSeenMessageIdByUser.forEach((val) => {
+      if (!lastSeenByUsers.has(val.messageId)) lastSeenByUsers.set(val.messageId, []);
+      lastSeenByUsers.get(val.messageId)!.push(val.user);
+    });
+
+    const getDateLabel = (date: Date) => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const diffDays = Math.floor((today.getTime() - msgDay.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'Hôm nay';
+      if (diffDays === 1) return 'Hôm qua';
+      if (diffDays < 7) {
+        const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        return days[date.getDay()];
+      }
+      return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    let lastDateLabel = '';
+
+    return messages.map((m, idx) => {
+      const nextMsg = messages[idx + 1];
+      const isSameAsNext = nextMsg && nextMsg.sender?.id === m.sender?.id;
+      const timeDiffToNext = nextMsg 
+        ? (new Date(nextMsg.created_at).getTime() - new Date(m.created_at).getTime()) / 1000 / 60 
+        : Infinity;
+      const hideTimestamp = isSameAsNext && timeDiffToNext < 5;
+      const hideAvatar = hideTimestamp;
+
+      const msgDate = new Date(m.created_at);
+      const dateLabel = getDateLabel(msgDate);
+      let showDateSeparator = false;
+      if (dateLabel !== lastDateLabel) {
+        showDateSeparator = true;
+        lastDateLabel = dateLabel;
+      }
+
+      return (
+        <React.Fragment key={m.id}>
+          {showDateSeparator && (
+            <div className="flex items-center justify-center py-2 my-1">
+              <div className="px-3 py-0.5 rounded-full bg-gray-200/70 dark:bg-slate-700/70 text-[10px] font-semibold text-gray-500 dark:text-slate-400">
+                {dateLabel}
+              </div>
+            </div>
+          )}
+          <MessageItem 
+            message={m}
+            currentUser={user}
+            hideTimestamp={hideTimestamp}
+            hideAvatar={hideAvatar}
+            isLatestOwnMessage={m.id === latestOwnMessageId}
+            lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
+            highlightedMessageId={highlightedMessageId}
+            isActiveSearchTarget={m.id === activeSearchId}
+            debouncedSearchQuery={debouncedSearchQuery}
+            onJumpToMessage={handleJumpToMessage}
+            onOpenActionMenu={openActionMenu}
+            onScheduleCloseActionMenu={scheduleCloseActionMenu}
+            onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
+            onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
+            onOpenReactionPicker={openReactionPicker}
+            onReactionSelect={handleReactionSelect}
+            onReply={handleReply}
+            onDelete={handleDelete}
+            onTogglePin={handleTogglePin}
+            onRemoveReaction={handleRemoveReaction}
+            onForward={handleForward}
+            renderHighlightedText={renderHighlightedText}
+          />
+        </React.Fragment>
+      );
+    });
+  }, [
+    messages, 
+    user, 
+    isLoading, 
+    latestOwnMessageId, 
+    highlightedMessageId, 
+    activeSearchId, 
+    debouncedSearchQuery, 
+    handleJumpToMessage, 
+    openActionMenu, 
+    scheduleCloseActionMenu, 
+    scheduleOpenReactionPicker, 
+    scheduleCloseReactionPicker, 
+    openReactionPicker, 
+    handleReactionSelect, 
+    handleReply, 
+    handleDelete, 
+    handleTogglePin, 
+    handleRemoveReaction, 
+    handleForward, 
+    renderHighlightedText
+  ]);
+
+
   if (!currentRoomId) {
     return <div className="flex-1 flex items-center justify-center text-gray-500"><p>Select a chat to start messaging</p></div>;
   }
-
-  const activeSearchId = activeSearchResultIndex >= 0 ? searchResults[activeSearchResultIndex]?.id : null;
-  const pinnedMsgs = [...pinnedMessages].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative bg-gradient-to-b from-white to-blue-50/50 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
@@ -456,134 +653,12 @@ export function ChatMessages() {
 
       <div
         ref={messagesContainerRef}
-        onScroll={() => {
-          const c = messagesContainerRef.current;
-          if (!c) return;
-          const isNearBottom = c.scrollHeight - c.scrollTop - c.clientHeight <= 100;
-          shouldStickToBottomRef.current = isNearBottom;
-          setShowScrollBottom(!isNearBottom && c.scrollTop < c.scrollHeight - c.clientHeight - 200);
-          
-          // Load older messages (scroll up)
-          if (c.scrollTop <= 50 && !isLoadingOlder && hasOlderMessages && !isJumpingRef.current) {
-            loadOlder(c.scrollHeight, c.scrollTop).then((res) => {
-              if (res && messagesContainerRef.current) {
-                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight - res.prevH + res.prevT;
-              }
-            });
-          }
-          
-          // Load newer messages (scroll down)
-          const isAtBottom = c.scrollHeight - c.scrollTop - c.clientHeight <= 30;
-          if (isAtBottom && !isLoadingNewer && hasNewerMessages && !isJumpingRef.current) {
-            loadNewer(c.scrollHeight, c.scrollTop).then((res) => {
-              if (res && messagesContainerRef.current) {
-                const newC = messagesContainerRef.current;
-                // Move scroll to where the previous bottom was, so the new messages are below
-                newC.scrollTop = res.prevH - newC.clientHeight;
-              }
-            });
-          }
-        }}
         className="flex-1 flex flex-col overflow-y-auto p-3 space-y-0.5 relative"
       >
         {!isLoading && messages.length > 0 && <div className="flex-1 min-h-0" />}
         {isLoadingOlder && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2 shrink-0">Loading history...</div>}
         
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full text-gray-400 font-medium">Loading conversation...</div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400 italic">No messages yet. Say hi!</div>
-        ) : (
-          (() => {
-            const lastSeenMessageIdByUser = new Map<string, { messageId: string; user: any }>();
-            messages.forEach((msg) => {
-              (msg.reads || []).forEach((read: any) => {
-                if (read.user?.id && read.user.id !== user?.id) {
-                  lastSeenMessageIdByUser.set(read.user.id, { messageId: msg.id, user: read.user });
-                }
-              });
-            });
-
-            const lastSeenByUsers = new Map<string, any[]>();
-            lastSeenMessageIdByUser.forEach((val) => {
-              if (!lastSeenByUsers.has(val.messageId)) lastSeenByUsers.set(val.messageId, []);
-              lastSeenByUsers.get(val.messageId)!.push(val.user);
-            });
-
-            const getDateLabel = (date: Date) => {
-              const now = new Date();
-              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-              const diffDays = Math.floor((today.getTime() - msgDay.getTime()) / (1000 * 60 * 60 * 24));
-              
-              if (diffDays === 0) return 'Hôm nay';
-              if (diffDays === 1) return 'Hôm qua';
-              if (diffDays < 7) {
-                const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-                return days[date.getDay()];
-              }
-              return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            };
-
-            let lastDateLabel = '';
-
-            return messages.map((m, idx) => {
-              const nextMsg = messages[idx + 1];
-              const isSameAsNext = nextMsg && nextMsg.sender?.id === m.sender?.id;
-              const timeDiffToNext = nextMsg 
-                ? (new Date(nextMsg.created_at).getTime() - new Date(m.created_at).getTime()) / 1000 / 60 
-                : Infinity;
-              const hideTimestamp = isSameAsNext && timeDiffToNext < 5;
-              const hideAvatar = hideTimestamp;
-
-              const msgDate = new Date(m.created_at);
-              const dateLabel = getDateLabel(msgDate);
-              let showDateSeparator = false;
-              if (dateLabel !== lastDateLabel) {
-                showDateSeparator = true;
-                lastDateLabel = dateLabel;
-              }
-
-              return (
-                <React.Fragment key={m.id}>
-                  {showDateSeparator && (
-                    <div className="flex items-center justify-center py-2 my-1">
-                      <div className="px-3 py-0.5 rounded-full bg-gray-200/70 dark:bg-slate-700/70 text-[10px] font-semibold text-gray-500 dark:text-slate-400">
-                        {dateLabel}
-                      </div>
-                    </div>
-                  )}
-                  <MessageItem 
-                    message={m}
-                    currentUser={user}
-                    hideTimestamp={hideTimestamp}
-                    hideAvatar={hideAvatar}
-                isLatestOwnMessage={user?.id === m.sender.id && messages.slice(idx+1).every(nm => nm.sender.id !== user?.id)}
-                lastSeenByUsers={lastSeenByUsers.get(m.id) || []}
-                highlightedMessageId={highlightedMessageId}
-                activeActionMenuMessageId={activeActionMenuMessageId}
-                reactionPickerFor={reactionPickerFor}
-                isActiveSearchTarget={m.id === activeSearchId}
-                debouncedSearchQuery={debouncedSearchQuery}
-                onJumpToMessage={handleJumpToMessage}
-                onOpenActionMenu={openActionMenu}
-                onScheduleCloseActionMenu={scheduleCloseActionMenu}
-                onScheduleOpenReactionPicker={scheduleOpenReactionPicker}
-                onScheduleCloseReactionPicker={scheduleCloseReactionPicker}
-                onOpenReactionPicker={openReactionPicker}
-                onReactionSelect={handleReactionSelect}
-                onReply={(m) => { setReplyingTo(m); closeActionMenu(); }}
-                onDelete={handleDelete}
-                onTogglePin={handleTogglePin}
-                onRemoveReaction={handleRemoveReaction}
-                onForward={(id) => { setForwardMessageId(id); closeActionMenu(); }}
-                renderHighlightedText={(t, h) => renderHighlightedText(t, h, m.mentions)}
-              />
-                </React.Fragment>
-              );
-            });
-          })()
-        )}
+        {renderedMessages}
 
         {isAnyBlocked && (
           <div className="mx-auto my-4 max-w-[80%] rounded-2xl bg-slate-100/80 px-4 py-3 text-center backdrop-blur-sm dark:bg-slate-800/80">
@@ -628,11 +703,13 @@ export function ChatMessages() {
         )}
       </AnimatePresence>
 
-      <ForwardModal
-        isOpen={!!forwardMessageId}
-        onClose={() => setForwardMessageId(null)}
-        messageId={forwardMessageId!}
-      />
+      {forwardMessageId && (
+        <ForwardModal
+          isOpen={!!forwardMessageId}
+          onClose={() => setForwardMessageId(null)}
+          messageId={forwardMessageId}
+        />
+      )}
     </div>
   );
 }

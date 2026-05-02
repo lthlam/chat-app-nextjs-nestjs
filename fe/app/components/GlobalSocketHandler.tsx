@@ -11,10 +11,18 @@ export function GlobalSocketHandler() {
   // Initialize socket connection and auth
   useSocketAuth();
 
-  const { user } = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const requestConfirm = useUiStore((state) => state.requestConfirm);
   const closeConfirm = useUiStore((state) => state.closeConfirm);
   const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !ringtoneRef.current) {
+      ringtoneRef.current = new Audio('/ringtone.wav');
+      ringtoneRef.current.loop = true;
+      ringtoneRef.current.volume = 0.5;
+    }
+  }, []);
 
   useEffect(() => {
     const socket = getSocket();
@@ -43,10 +51,7 @@ export function GlobalSocketHandler() {
       console.log('[GLOBAL] 📞 Incoming call request from:', payload.fromUsername || payload.fromUserId);
 
       // Play ringtone
-      if (!ringtoneRef.current) {
-        ringtoneRef.current = new Audio('/ringtone.wav');
-        ringtoneRef.current.loop = true;
-        ringtoneRef.current.volume = 0.5;
+      if (ringtoneRef.current) {
         ringtoneRef.current.play().catch(e => console.warn('Ringtone blocked by browser autoplay policy:', e));
       }
 
@@ -61,7 +66,7 @@ export function GlobalSocketHandler() {
       // Stop ringtone
       if (ringtoneRef.current) {
         ringtoneRef.current.pause();
-        ringtoneRef.current = null;
+        ringtoneRef.current.currentTime = 0;
       }
 
       if (accepted) {
@@ -83,7 +88,7 @@ export function GlobalSocketHandler() {
       closeConfirm();
       if (ringtoneRef.current) {
         ringtoneRef.current.pause();
-        ringtoneRef.current = null;
+        ringtoneRef.current.currentTime = 0;
       }
     };
 
@@ -104,7 +109,7 @@ export function GlobalSocketHandler() {
 
       if (ringtoneRef.current) {
         ringtoneRef.current.pause();
-        ringtoneRef.current = null;
+        ringtoneRef.current.currentTime = 0;
       }
     };
   }, [user?.id, requestConfirm, closeConfirm]);

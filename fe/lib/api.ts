@@ -92,12 +92,7 @@ export async function apiCall<T>(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('📤 Sending token:', token.substring(0, 20) + '...');
-  } else {
-    console.log('⚠️ No token found');
   }
-
-  console.log('📡 API Call:', url);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
   if (!apiUrl) {
@@ -105,16 +100,11 @@ export async function apiCall<T>(
   }
 
   const fullUrl = `${apiUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
-  console.log('📡 Fetching:', fullUrl);
 
   const response = await fetch(fullUrl, {
     ...options,
     headers,
   });
-
-  console.log('📥 Response Status:', response.status);
-
-  console.log('📥 Response:', response.status);
 
   if (response.status === 401 && !url.includes('/auth/login')) {
     console.warn('🔑 Token expired or unauthorized. Logging out...');

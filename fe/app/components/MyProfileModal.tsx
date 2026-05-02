@@ -13,7 +13,8 @@ interface MyProfileModalProps {
 }
 
 export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
-  const { user, setUser } = useAuthStore();
+  const user = useAuthStore(s => s.user);
+  const setUser = useAuthStore(s => s.setUser);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');

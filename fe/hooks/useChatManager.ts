@@ -6,8 +6,13 @@ import { messagesApi, Message } from '@/lib/api';
 
 export function useChatManager(currentRoomId: string | null) {
   const PAGE_SIZE = 20;
-  const { setMessages, addMessage, setRooms, markRoomAsRead, setPinnedMessages, clearedAtByRoom } = useChatStore();
-  const { user } = useAuthStore();
+  const setMessages = useChatStore(s => s.setMessages);
+  const addMessage = useChatStore(s => s.addMessage);
+  const setRooms = useChatStore(s => s.setRooms);
+  const markRoomAsRead = useChatStore(s => s.markRoomAsRead);
+  const setPinnedMessages = useChatStore(s => s.setPinnedMessages);
+  const clearedAtByRoom = useChatStore(s => s.clearedAtByRoom);
+  const user = useAuthStore(s => s.user);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);

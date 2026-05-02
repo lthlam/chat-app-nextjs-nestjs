@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Send } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { Avatar } from './Avatar';
@@ -9,8 +10,8 @@ interface FriendItemProps {
   onStartChat: (friend: any) => void;
 }
 
-export function FriendItem({ friend, onStartChat }: FriendItemProps) {
-  const { setSelectedUserProfileUser } = useChatStore();
+export const FriendItem = memo(function FriendItem({ friend, onStartChat }: FriendItemProps) {
+  const setSelectedUserProfileUser = useChatStore(s => s.setSelectedUserProfileUser);
 
   return (
     <div className="w-full text-left px-4 py-3 max-[420px]:px-3 max-[420px]:py-2.5 max-[380px]:px-2.5 max-[380px]:py-2 hover:bg-white/80 transition dark:hover:bg-slate-800 group/friend">
@@ -49,4 +50,4 @@ export function FriendItem({ friend, onStartChat }: FriendItemProps) {
       </div>
     </div>
   );
-}
+});

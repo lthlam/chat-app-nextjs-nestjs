@@ -31,6 +31,10 @@ interface UiStoreState {
   requestConfirm: (options: ConfirmOptions) => Promise<boolean>;
   resolveConfirm: (accepted: boolean) => void;
   closeConfirm: () => void;
+  activeActionMenuMessageId: string | null;
+  reactionPickerFor: string | null;
+  setActiveActionMenuMessageId: (id: string | null | ((prev: string | null) => string | null)) => void;
+  setReactionPickerFor: (id: string | null | ((prev: string | null) => string | null)) => void;
   reset: () => void;
 }
 
@@ -96,8 +100,19 @@ export const useUiStore = create<UiStoreState>((set) => ({
       confirmDialog: defaultConfirmDialog,
     });
   },
+  activeActionMenuMessageId: null,
+  reactionPickerFor: null,
+  setActiveActionMenuMessageId: (id) => set((state) => ({ 
+    activeActionMenuMessageId: typeof id === 'function' ? id(state.activeActionMenuMessageId) : id 
+  })),
+  setReactionPickerFor: (id) => set((state) => ({ 
+    reactionPickerFor: typeof id === 'function' ? id(state.reactionPickerFor) : id 
+  })),
+
   reset: () => set({
     toasts: [],
     confirmDialog: defaultConfirmDialog,
+    activeActionMenuMessageId: null,
+    reactionPickerFor: null,
   }),
 }));

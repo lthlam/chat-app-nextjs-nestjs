@@ -5,6 +5,7 @@ import { Pin, Check, Forward } from 'lucide-react';
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
+import { useUiStore } from '@/store/uiStore';
 import { MessageMediaPreview } from './MessageMediaPreview';
 import { MessageActionMenu } from './MessageActionMenu';
 import { Avatar } from './Avatar';
@@ -14,8 +15,7 @@ interface MessageItemProps {
   currentUser: User | null;
   isLatestOwnMessage: boolean;
   highlightedMessageId: string | null;
-  activeActionMenuMessageId: string | null;
-  reactionPickerFor: string | null;
+
   isActiveSearchTarget: boolean;
   debouncedSearchQuery: string;
   onJumpToMessage: (id: string) => void;
@@ -43,8 +43,7 @@ export const MessageItem = memo(({
   hideTimestamp,
   hideAvatar,
   highlightedMessageId,
-  activeActionMenuMessageId,
-  reactionPickerFor,
+
   isActiveSearchTarget,
   onJumpToMessage,
   onOpenActionMenu,
@@ -61,6 +60,9 @@ export const MessageItem = memo(({
   renderHighlightedText,
   lastSeenByUsers = [],
 }: MessageItemProps) => {
+  const activeActionMenuMessageId = useUiStore(s => s.activeActionMenuMessageId);
+  const reactionPickerFor = useUiStore(s => s.reactionPickerFor);
+
   const isCurrentUser = currentUser?.id === message.sender.id;
   
   const isImageLikeContent = (content?: string) => {
@@ -94,7 +96,7 @@ export const MessageItem = memo(({
     return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')} ${time}`;
   })();
 
-  const { setSelectedUserProfileUser } = useChatStore();
+  const setSelectedUserProfileUser = useChatStore(s => s.setSelectedUserProfileUser);
 
   return (
     <motion.div
@@ -103,7 +105,7 @@ export const MessageItem = memo(({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 400 }}
       className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} gap-2 relative group`}
-      style={{ zIndex: (activeActionMenuMessageId === message.id || reactionPickerFor === message.id) ? 50 : 'auto' }}
+      style={{ zIndex: (activeActionMenuMessageId === message.id || reactionPickerFor === message.id) ? 200 : 'auto' }}
       data-message-id={message.id}
     >
       {!isCurrentUser && (
@@ -166,7 +168,7 @@ export const MessageItem = memo(({
             message={message}
             isCurrentUser={isCurrentUser}
             onJumpToMessage={onJumpToMessage}
-            renderHighlightedText={(text, highlight) => renderHighlightedText(text, highlight, message.mentions)}
+            renderHighlightedText={renderHighlightedText}
             isActiveSearchTarget={isActiveSearchTarget}
           />
 

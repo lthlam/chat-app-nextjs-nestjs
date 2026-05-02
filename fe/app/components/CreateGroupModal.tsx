@@ -16,11 +16,13 @@ interface CreateGroupModalProps {
 }
 
 export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGroupModalProps) {
-  const { rooms, setRooms, setCurrentRoomId } = useChatStore();
+  const rooms = useChatStore(s => s.rooms);
+  const setRooms = useChatStore(s => s.setRooms);
+  const setCurrentRoomId = useChatStore(s => s.setCurrentRoomId);
   const showToast = useUiStore((state) => state.showToast);
   const [groupName, setGroupName] = useState('');
   const [friends, setFriends] = useState<any[]>([]);
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -43,9 +45,12 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
   }, [isOpen]);
 
   const toggleMember = (friendId: string) => {
-    setSelectedMembers((prev) =>
-      prev.includes(friendId) ? prev.filter((id) => id !== friendId) : [...prev, friendId],
-    );
+    setSelectedMembers((prev) => {
+      const next = new Set(prev);
+      if (next.has(friendId)) next.delete(friendId);
+      else next.add(friendId);
+      return next;
+    });
   };
 
   const handleCreateGroup = async () => {
@@ -54,7 +59,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
       return;
     }
 
-    if (selectedMembers.length < 2) {
+    if (selectedMembers.size < 2) {
       showToast('Vui lòng chọn ít nhất 2 thành viên.', 'error');
       return;
     }
@@ -63,7 +68,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
       setIsCreating(true);
       const newRoom = await roomsApi.createRoom({
         name: groupName,
-        members: selectedMembers,
+        members: Array.from(selectedMembers),
       });
 
       setRooms([...rooms, newRoom]);
@@ -71,7 +76,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
 
       // Reset form
       setGroupName('');
-      setSelectedMembers([]);
+      setSelectedMembers(new Set());
       onClose();
       onGroupCreated?.();
       showToast('Tạo nhóm thành công.', 'success');
@@ -84,7 +89,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
   };
 
   const hasGroupName = groupName.trim().length > 0;
-  const hasEnoughMembers = selectedMembers.length >= 2;
+  const hasEnoughMembers = selectedMembers.size >= 2;
 
   return (
     <AnimatePresence>
@@ -140,7 +145,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
               {/* Members Selection */}
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">
-                  Chọn thành viên ({selectedMembers.length} đã chọn, tối thiểu 2)
+                  Chọn thành viên ({selectedMembers.size} đã chọn, tối thiểu 2)
                 </label>
                 <div className="max-h-64 overflow-y-auto custom-scrollbar">
 
@@ -153,14 +158,14 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
                       <label
                         key={friend.id}
                         className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-blue-50/50 dark:hover:bg-slate-800/50 cursor-pointer ${
-                          selectedMembers.includes(friend.id) ? 'bg-blue-50 dark:bg-slate-800' : ''
+                          selectedMembers.has(friend.id) ? 'bg-blue-50 dark:bg-slate-800' : ''
                         }`}
                       >
 
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <input
                             type="checkbox"
-                            checked={selectedMembers.includes(friend.id)}
+                            checked={selectedMembers.has(friend.id)}
                             onChange={() => toggleMember(friend.id)}
                             disabled={isCreating}
                               className="h-4 w-4 rounded border-primary-light text-primary focus:ring-primary dark:border-slate-500"
@@ -190,9 +195,9 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
               </div>
 
               {/* Selected Members Tags */}
-              {selectedMembers.length > 0 && (
+              {selectedMembers.size > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedMembers.map((memberId) => {
+                  {Array.from(selectedMembers).map((memberId) => {
                     const friend = friends.find((f) => f.id === memberId);
                     return (
                       <div

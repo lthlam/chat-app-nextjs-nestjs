@@ -16,8 +16,8 @@ interface ForwardModalProps {
 }
 
 export function ForwardModal({ isOpen, onClose, messageId }: ForwardModalProps) {
-  const { rooms } = useChatStore();
-  const { user } = useAuthStore();
+  const rooms = useChatStore(s => s.rooms);
+  const user = useAuthStore(s => s.user);
   const showToast = useUiStore((state) => state.showToast);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');

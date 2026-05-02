@@ -31,7 +31,9 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedRoomId, setExpandedRoomId] = useState<string | null>(null);
-  const { setCurrentRoomId, setPendingJumpMessageId, markRoomAsRead } = useChatStore();
+  const setCurrentRoomId = useChatStore(s => s.setCurrentRoomId);
+  const setPendingJumpMessageId = useChatStore(s => s.setPendingJumpMessageId);
+  const markRoomAsRead = useChatStore(s => s.markRoomAsRead);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
