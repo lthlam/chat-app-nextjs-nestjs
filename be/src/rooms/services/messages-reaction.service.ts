@@ -27,7 +27,7 @@ export class MessagesReactionService {
   ) {}
 
   async addReaction(messageId: string, userId: string, emoji: string) {
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const message = await manager.getRepository(Message).findOne({
         where: { id: messageId },
         relations: [
@@ -79,15 +79,17 @@ export class MessagesReactionService {
         ],
       });
 
-      if (updated) {
-        this.eventEmitter.emit('message.reaction_updated', {
-          roomId: updated.room.id,
-          message: updated,
-        });
-      }
-
       return updated;
     });
+
+    if (result) {
+      this.eventEmitter.emit('message.reaction_updated', {
+        roomId: result.room.id,
+        message: result,
+      });
+    }
+
+    return result;
   }
 
   async removeReaction(reactionId: string, userId: string) {
@@ -168,7 +170,7 @@ export class MessagesReactionService {
     const isMember = room.members.some((m) => m.id === userId);
     if (!isMember) throw new ForbiddenException('Not a member of this room');
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const undeliveredMessages = await manager
         .getRepository(Message)
         .createQueryBuilder('message')
@@ -202,15 +204,17 @@ export class MessagesReactionService {
         ],
       });
 
-      if (updatedMessages.length > 0) {
-        this.eventEmitter.emit(ROOM_EVENTS.MESSAGE_ROOM_DELIVERED, {
-          roomId,
-          messages: updatedMessages,
-        });
-      }
-
       return updatedMessages;
     });
+
+    if (result.length > 0) {
+      this.eventEmitter.emit(ROOM_EVENTS.MESSAGE_ROOM_DELIVERED, {
+        roomId,
+        messages: result,
+      });
+    }
+
+    return result;
   }
 
   async markRoomAsSeen(roomId: string, userId: string) {
@@ -222,7 +226,7 @@ export class MessagesReactionService {
     const isMember = room.members.some((m) => m.id === userId);
     if (!isMember) throw new ForbiddenException('Not a member of this room');
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const unreadMessages = await manager
         .getRepository(Message)
         .createQueryBuilder('message')
@@ -283,9 +287,13 @@ export class MessagesReactionService {
         updatedMessages,
       };
 
-      this.eventEmitter.emit(ROOM_EVENTS.MESSAGE_SEEN, seenPayload);
-
       return seenPayload;
     });
+
+    if (result.updatedMessages.length > 0) {
+      this.eventEmitter.emit(ROOM_EVENTS.MESSAGE_SEEN, result);
+    }
+
+    return result;
   }
 }

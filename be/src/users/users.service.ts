@@ -159,7 +159,7 @@ export class UsersService implements OnModuleInit {
       throw new BadRequestException('Cannot block yourself');
     }
 
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const blocker = await manager.findOne(User, { where: { id: blockerId } });
       const blocked = await manager.findOne(User, { where: { id: blockedId } });
 
@@ -188,14 +188,16 @@ export class UsersService implements OnModuleInit {
 
       const savedBlockedUser = await manager.save(blockedUser);
 
-      // Notify the blocked user after DB success
-      this.eventEmitter.emit(FRIEND_EVENTS.USER_BLOCKED, {
-        blockedId,
-        blockerId: blockerId,
-      });
-
       return savedBlockedUser;
     });
+
+    // Notify the blocked user after DB success
+    this.eventEmitter.emit(FRIEND_EVENTS.USER_BLOCKED, {
+      blockedId,
+      blockerId: blockerId,
+    });
+
+    return result;
   }
 
   async unblockUser(blockerId: string, blockedId: string): Promise<void> {
