@@ -649,7 +649,7 @@ export function ChatMessages() {
 
       <div
         ref={messagesContainerRef}
-        className="flex-1 flex flex-col overflow-y-auto p-3 space-y-0.5 relative"
+        className="flex-1 flex flex-col overflow-y-auto px-3 pt-3 pb-7 space-y-0.5 relative"
       >
         {!isLoading && messages.length > 0 && <div className="flex-1 min-h-0" />}
         {isLoadingOlder && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2 shrink-0">Đang tải lịch sử…</div>}
@@ -668,10 +668,18 @@ export function ChatMessages() {
 
         {isLoadingNewer && <div className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest py-2">Đang tải tin nhắn mới hơn…</div>}
         
-        <TypingIndicator typingUsers={typingUsers} />
         <div ref={messagesEndRef} />
       </div>
-
+      
+      {/* Sticky Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="absolute bottom-0.5 left-4 z-10 pointer-events-none animate-in fade-in slide-in-from-bottom-1 duration-300">
+          <div className="max-w-max rounded-full px-4 py-1.5 pointer-events-auto">
+            <TypingIndicator typingUsers={typingUsers} />
+          </div>
+        </div>
+      )}
+      
       <AnimatePresence>
         {showScrollBottom && (
           <motion.button
