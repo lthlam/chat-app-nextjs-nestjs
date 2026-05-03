@@ -8,7 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useUiStore } from '@/store/uiStore';
 
 
-import { motion } from 'framer-motion';
+import { motion, useIsPresent } from 'framer-motion';
 
 const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
 
@@ -31,6 +31,8 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
   const [links, setLinks] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [roomMembers, setRoomMembers] = useState<any[]>([]);
+  const [isAnimationFinished, setIsAnimationFinished] = useState(false);
+  const isPresent = useIsPresent();
 
 
   useEffect(() => {
@@ -147,8 +149,9 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
         initial={{ x: '100%', width: 0, opacity: 0 }}
         animate={{ x: 0, width: 320, opacity: 1 }}
         exit={{ x: '100%', width: 0, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="relative h-full border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex flex-col z-50 shadow-2xl md:shadow-none overflow-hidden"
+        transition={{ duration: 0.35, ease: [0.33, 1, 0.68, 1] }}
+        onAnimationComplete={() => setIsAnimationFinished(true)}
+        className="relative h-full shrink-0 border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex flex-col z-50 shadow-2xl md:shadow-none overflow-hidden will-change-[width,transform]"
       >
         {/* Header with Back Arrow */}
         <div className="px-3 py-1 flex items-center bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm">
@@ -187,7 +190,7 @@ export function RoomDetailsSidebar({ roomId, isGroup, onClose }: RoomDetailsSide
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-3 xl:p-4 custom-scrollbar">
-          {loading ? (
+          {!isPresent || !isAnimationFinished || loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
             </div>

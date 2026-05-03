@@ -302,7 +302,7 @@ export function GroupSettingsModal({
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900 overflow-hidden"
       >
         {/* Header */}
@@ -358,48 +358,55 @@ export function GroupSettingsModal({
           <div className="sticky top-0 z-10 flex border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
             <button
               onClick={() => setTab('settings')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition ${
                 tab === 'settings'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
               }`}
             >
               Thông tin
-              {tab === 'settings' && <motion.div layoutId="activeTabGroup" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />}
             </button>
             <button
               onClick={() => setTab('members')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition ${
                 tab === 'members'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
               }`}
             >
               Thành viên
-              {tab === 'members' && <motion.div layoutId="activeTabGroup" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />}
             </button>
             <button
               onClick={() => setTab('add')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition ${
                 tab === 'add'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
               }`}
             >
               Thêm
-              {tab === 'add' && <motion.div layoutId="activeTabGroup" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />}
             </button>
             <button
               onClick={() => setTab('remove')}
-              className={`flex-1 py-3 text-sm font-bold text-center transition relative ${
+              className={`flex-1 py-3 text-sm font-bold text-center transition ${
                 tab === 'remove'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
               }`}
             >
               Xóa
-              {tab === 'remove' && <motion.div layoutId="activeTabGroup" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />}
             </button>
+
+            {/* Stable Underline Indicator */}
+            <motion.div 
+              className="absolute bottom-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+              initial={false}
+              animate={{ 
+                left: tab === 'settings' ? '0%' : tab === 'members' ? '25%' : tab === 'add' ? '50%' : '75%',
+                width: '25%' 
+              }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+            />
           </div>
 
           {/* Tab Content */}
@@ -410,7 +417,7 @@ export function GroupSettingsModal({
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 {isLoading ? (
                   <div className="py-4 text-center text-gray-500 dark:text-slate-400">Đang tải…</div>

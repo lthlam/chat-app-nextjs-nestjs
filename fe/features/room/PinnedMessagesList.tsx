@@ -58,7 +58,7 @@ export function PinnedMessagesList({
             initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
             animate={{ opacity: 1, height: 'auto', scaleY: 1 }}
             exit={{ opacity: 0, height: 0, scaleY: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="absolute left-0 right-0 top-full mt-0 origin-top overflow-hidden bg-white shadow-lg dark:bg-slate-900 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] rounded-b-2xl"
           >
             <div className="max-h-36 space-y-1 overflow-y-auto p-2">

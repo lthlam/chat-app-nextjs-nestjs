@@ -118,7 +118,7 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl border-4 border-white bg-white shadow-2xl dark:bg-slate-900 dark:border-slate-800 overflow-hidden"
           >
             {/* Header */}
@@ -132,13 +132,12 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
               </button>
             </div>
 
-            {/* Tabs */}
-            <div className="flex bg-blue-50/30 dark:bg-slate-800/50 shrink-0">
+            <div className="flex bg-blue-50/30 dark:bg-slate-800/50 shrink-0 relative">
               <button
                 onClick={() => setTab('profile')}
                 className={`flex-1 py-3 text-center font-semibold transition ${
                   tab === 'profile'
-                    ? 'border-b-2 border-blue-600 bg-white/50 text-blue-700 dark:bg-slate-700/50 dark:text-blue-300'
+                    ? 'text-blue-700 dark:text-blue-300'
                     : 'text-gray-500 hover:text-blue-600 dark:text-slate-400'
                 }`}
               >
@@ -148,12 +147,23 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
                 onClick={() => setTab('password')}
                 className={`flex-1 py-3 text-center font-semibold transition ${
                   tab === 'password'
-                    ? 'border-b-2 border-blue-600 bg-white/50 text-blue-700 dark:bg-slate-700/50 dark:text-blue-300'
+                    ? 'text-blue-700 dark:text-blue-300'
                     : 'text-gray-500 hover:text-blue-600 dark:text-slate-400'
                 }`}
               >
                 Mật khẩu
               </button>
+
+              {/* Stable Underline Indicator */}
+              <motion.div 
+                className="absolute bottom-0 h-0.5 bg-blue-600"
+                initial={false}
+                animate={{ 
+                  left: tab === 'profile' ? '0%' : '50%',
+                  width: '50%' 
+                }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+              />
             </div>
 
             {/* Content */}
@@ -164,7 +174,7 @@ export function MyProfileModal({ isOpen, onClose }: MyProfileModalProps) {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   {error && (
                     <div className="mb-4 p-3 bg-red-100/80 border border-red-200 text-red-700 rounded-xl text-sm">

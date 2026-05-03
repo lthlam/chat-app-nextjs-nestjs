@@ -99,10 +99,12 @@ const MessageItemBase = memo(function MessageItemBase({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} gap-2 relative group`}
       style={{ zIndex: (activeActionMenuMessageId === message.id || reactionPickerFor === message.id) ? 200 : 'auto' }}
       data-message-id={message.id}

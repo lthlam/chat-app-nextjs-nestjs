@@ -107,7 +107,7 @@ export function CreateGroupModal({ isOpen, onClose, onGroupCreated }: CreateGrou
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             className="relative w-full max-w-md max-h-screen overflow-y-auto rounded-[2.5rem] border border-slate-100 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900"
           >
             {/* Header */}

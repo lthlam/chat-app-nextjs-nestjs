@@ -130,7 +130,7 @@ export function RoomListFriends() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="relative w-full max-w-md overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between border-b border-blue-100 bg-blue-50/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/90">

@@ -93,7 +93,7 @@ export function RoomListTabs() {
             <motion.div
               layoutId="tabActive"
               className="absolute inset-0 bg-blue-600 rounded-lg shadow-sm"
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
             />
           )}
         </button>
@@ -114,9 +114,9 @@ export function RoomListSubTabs() {
         <button
           key={filter}
           onClick={() => setChatFilter(filter)}
-          className={`text-xs font-bold transition relative py-1 ${
+          className={`text-xs font-bold transition-colors relative py-1 ${
             chatFilter === filter
-              ? 'text-blue-600 dark:text-blue-400'
+              ? 'text-violet-500 dark:text-violet-400'
               : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
           }`}
         >
@@ -135,8 +135,8 @@ export function RoomListSubTabs() {
           {chatFilter === filter && (
             <motion.div
               layoutId="chatFilterActive"
-              className="absolute -bottom-[9px] left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400"
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="absolute -bottom-[9px] left-0 right-0 h-[3px] bg-violet-500 dark:bg-violet-400 rounded-full"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
             />
           )}
         </button>

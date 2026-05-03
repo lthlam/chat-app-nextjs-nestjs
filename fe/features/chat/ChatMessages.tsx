@@ -620,7 +620,7 @@ export function ChatMessages() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
             <MessageSearchBar 
@@ -678,6 +678,7 @@ export function ChatMessages() {
             initial={{ opacity: 0, scale: 0.5, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: 20 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={async () => {

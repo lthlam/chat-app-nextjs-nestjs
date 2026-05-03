@@ -260,7 +260,7 @@ export function MessageInput() {
               initial={{ opacity: 0, height: 0, y: 10 }}
               animate={{ opacity: 1, height: 'auto', y: 0 }}
               exit={{ opacity: 0, height: 0, y: 10 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
               <div className="mb-2 w-full rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-900 dark:bg-slate-800 dark:text-slate-200">
