@@ -2,6 +2,8 @@
 
 A modern, real-time messaging platform built with **NestJS**, **Next.js**, and **Socket.io**. Designed for speed, scalability, and a premium user experience.
 
+🔗 **Live Demo**: [https://chat-app-nextjs-nestjs.vercel.app/](https://chat-app-nextjs-nestjs.vercel.app/)
+
 ---
 
 ## 🛠️ Tech Stack
