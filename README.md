@@ -7,18 +7,25 @@ A modern, real-time messaging platform built with **NestJS**, **Next.js**, and *
 ## 🛠️ Tech Stack
 
 ### Backend (`/be`)
-- **Framework**: [NestJS v10](https://nestjs.com/)
+- **Core**: [NestJS v10](https://nestjs.com/) (Node.js Framework)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **ORM**: [TypeORM](https://typeorm.io/)
 - **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **Real-time**: [Socket.io](https://socket.io/)
-- **Auth**: JWT Strategy with Passport
+- **Real-time**: [Socket.io](https://socket.io/) (WebSockets)
+- **Auth**: [JWT](https://jwt.io/) with [Passport.js](https://www.passportjs.org/)
+- **Security**: [Helmet](https://helmetjs.github.io/), [Throttler](https://docs.nestjs.com/security/rate-limiting) (Rate Limiting)
+- **Media**: [Cloudinary](https://cloudinary.com/) (Cloud Storage)
+- **WebRTC**: [Metered.ca](https://www.metered.ca/) (TURN/STUN Servers)
+- **Documentation**: [Swagger / OpenAPI](https://swagger.io/)
 
 ### Frontend (`/fe`)
-- **Framework**: [Next.js 15+](https://nextjs.org/)
-- **UI**: [React 19](https://react.dev/), [Tailwind CSS 4](https://tailwindcss.com/)
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **UI Library**: [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
-- **Icons**: Lucide React
-- **Media**: [Cloudinary](https://cloudinary.com/) (Images, Video, Voice)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Real-time**: [Socket.io-client](https://socket.io/)
 
 ---
 
@@ -28,7 +35,8 @@ A modern, real-time messaging platform built with **NestJS**, **Next.js**, and *
 - 💬 **Real-time Messaging**: Instant message delivery via WebSockets.
 - 📁 **Chat Rooms**: Create, join, and manage group or private conversations.
 - 👥 **Friend System**: Search users, send friend requests, and manage social connections.
-- 🎞️ **Media Support**: Share images and files in chats.
+- 📞 **Audio & Video Calls**: High-quality real-time communication powered by WebRTC.
+- 🎞️ **Media Support**: Share images, videos, and voice messages in chats.
 - 📱 **Responsive Design**: Optimized for both desktop and mobile devices.
 
 ---
@@ -98,7 +106,3 @@ The services will be available at:
 ├── docker-compose.yml  # Local deployment orchestration
 └── package.json        # Root scripts & orchestration
 ```
-
----
-
-## 📝 License

@@ -47,6 +47,14 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   DB_SSL: string;
+
+  @IsOptional()
+  @IsString()
+  METERED_TURN_USERNAME: string;
+
+  @IsOptional()
+  @IsString()
+  METERED_TURN_CREDENTIAL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
